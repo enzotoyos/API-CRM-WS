@@ -36,6 +36,7 @@
     "typescript": "^4.5.5"
   },
   "dependencies": {
+    "apidoc": "^0.50.4",
     "express": "^4.17.3",
     "firebase": "^9.6.7"
   }
