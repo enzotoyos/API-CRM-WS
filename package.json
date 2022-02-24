@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "apidoc": "^0.50.4",
+    "body-parser": "^1.19.2",
     "express": "^4.17.3",
     "firebase": "^9.6.7"
   }
