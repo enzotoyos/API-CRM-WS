@@ -17,7 +17,7 @@ app.use(function (req: any, res, next) {
 
 // ------------------------ Récupération des Routes -------------------------
 import AdminRoute from './lib/routes/AdminRoute';
-
+import OrganizationRoute from './lib/routes/OrganizationRoute';
 // ------------------------ Définition des Routes -------------------------
 // Route Principale
 app.get('/', (req: Request, res: Response) => {
@@ -29,6 +29,7 @@ app.get('/alive', (req: Request, res: Response) => {
 });
 // Définition des routes
 app.use('/admin', AdminRoute);
+app.use('/organization', OrganizationRoute);
 
 //Démarrage de l'API
 const httpServer = http.createServer(app);
