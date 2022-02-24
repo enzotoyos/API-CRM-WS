@@ -7,6 +7,10 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 const app: Application = express();
 
+// Initialisation de Firebase
+import * as Firebase from './config/Firebase';
+Firebase;
+
 app.use(function (req: any, res, next) {
     // console.log(req.useragent);
     res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
