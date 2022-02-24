@@ -1,7 +1,10 @@
 import express from "express";
 import { Router, Request, Response } from "express";
+import { FirebaseApp } from "firebase/app";
+import { addDoc, collection, getFirestore } from "firebase/firestore";
 
 const AdminRoute = Router();
+const db = getFirestore();
 
 /**
  * @api {get} admin/ Get Admin
@@ -19,14 +22,28 @@ AdminRoute.get("/", async (req: Request, res: Response) => {
 /**
  * @api {post} admin/ Post Admin
  * @apiGroup Admin
- * @apiName getAdmin
- * @apiDescription Get Admin
+ * @apiName postAdmin
+ * @apiDescription Post Admin
  * @apiPermission Token
  *
  */
 AdminRoute.post("/", async (req: Request, res: Response) => {
-  let result = { success: true, message: "Create ok " };
-  res.status(200).send(result);
+  try {
+    const docRef = await addDoc(collection(db, "admins"), {
+      email: req.body.email,
+      phone: req.body.phone,
+      name: req.body.name,
+      surname: req.body.surname,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      organization: [],
+    });
+    console.log("docRef : " + docRef.id);
+    let result = { success: true, message: "Utilisateur Ajouté" };
+    res.status(200).send(result);
+  } catch (error: any) {
+    console.log(error);
+  }
 });
 
 /**
