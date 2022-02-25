@@ -2,7 +2,9 @@ import express from "express";
 import { Router, Request, Response } from "express";
 import admin from "firebase-admin";
 import { getAuth } from "firebase-admin/auth";
-import db from "firebase-admin/firestore";
+import { DocumentData, getFirestore } from "firebase-admin/firestore";
+
+const db = getFirestore();
 const AdminRoute = Router();
 
 /**
@@ -36,17 +38,28 @@ AdminRoute.post("/", async (req: Request, res: Response) => {
     });
     console.log("Successfully created new user:", userRecord.uid);
 
-    const cityRef = db.collection("cities").doc("BJ");
+    const userDoc = db.collection("admins").doc(userRecord.uid);
+    const resultat = await userDoc.set({
+      email: req.body.email,
+      emailVerified: false,
+      name: req.body.name,
+      surname: req.body.surname,
+      phone: req.body.phone,
+      organization: [],
+    });
+    getAuth()
+      .generateEmailVerificationLink(req.body.email)
+      .then((link) => {
+        console.log("link", link);
 
-    const res = await cityRef.set(
-      {
-        capital: true,
-      },
-      { merge: true }
-    );
-
-    let result = { success: true, message: "création réussi " };
-    res.status(200).send(result);
+        res.status(200).send({
+          success: true,
+          message: "création réussi, un Email à été envoyé",
+        });
+      })
+      .catch((error) => {
+        res.status(403).send({ error: "erreur lors de l'envoi de l'email" });
+      });
   } catch (error) {
     console.log("Error creating new user:", error);
     res.status(403).send(error.message);
