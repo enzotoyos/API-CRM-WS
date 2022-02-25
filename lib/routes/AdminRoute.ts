@@ -1,28 +1,8 @@
 import express from "express";
 import { Router, Request, Response } from "express";
-import {
-  addDoc,
-  collection,
-  getFirestore,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-  setDoc,
-} from "firebase/firestore";
-import TokenController = require("../controller/TokenController");
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
+import admin from "firebase-admin";
 
 const AdminRoute = Router();
-const db = getFirestore();
-const auth = getAuth();
-const tokenCtrl = new TokenController();
 
 /**
  * @api {get} admin/ Get Admin
@@ -33,30 +13,7 @@ const tokenCtrl = new TokenController();
  *
  */
 
-AdminRoute.get("/", async (req: Request, res: Response) => {
-  if (req.query.id) {
-    var id: string = req.query.id + "";
-    const docRef = doc(db, "admins", id);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      console.log("Document data:", docSnap.data());
-      res.status(200).send(docSnap.data());
-    } else {
-      let result = {
-        success: false,
-        message: "Aucun utilisateur ne correspond à cet ID",
-      };
-      res.status(403).send(result);
-    }
-  } else {
-    let result = {
-      success: false,
-      message: "Aucun ID renseigné",
-    };
-    res.status(403).send(result);
-  }
-});
+AdminRoute.get("/", async (req: Request, res: Response) => {});
 
 /**
  * @api {post} admin/ Post Admin
