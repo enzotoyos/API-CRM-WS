@@ -78,7 +78,9 @@ CustomerRoute.get("/:id", async (req: Request, res: Response) => {
  * @apiBody {String} phone          Mandatory Lastname.
  * @apiBody {String} name           Mandatory First name of the User.
  * @apiBody {String} surname        Mandatory Lastname of the User.
- * @apiBody {String} file           Optionnal base 64 of a file.
+ * @apiBody {String} filename       Optionnal base 64 of a file.
+ * @apiBody {Number} Age            Optionnal age.
+ * @apiBody {Array} Appointement    Mandatory Array of Appointement.
  */
 CustomerRoute.post("/", async (req: Request, res: Response) => {
     try {
@@ -88,6 +90,8 @@ CustomerRoute.post("/", async (req: Request, res: Response) => {
             name: req.body.name,
             surname: req.body.surname,
             filename: '',
+            age: 0,
+            appointement: [],
             createdAt: Date.now(),
             updatedAt: Date.now(),
             createdBy: '',
