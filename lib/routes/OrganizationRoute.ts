@@ -52,7 +52,7 @@ OrganizationRoute.get("/:id", async (req: Request, res: Response) => {
         const doc = await orgaRef.get();
         if (!doc.exists) {
             console.log('No such document!');
-            result.message = 'Aucune organisation correspondante';
+            result.message = 'Aucune organisation correspondant';
         } else {
             result.result = doc.data();
         }
@@ -71,10 +71,8 @@ OrganizationRoute.get("/:id", async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  * @apiBody {String} address          Mandatory address of the Organization.
- * @apiBody {String} name             Mandatory  name of the Organization.
- * @apiBody {Array} customers         Mandatory Array of Customers.
- * @apiBody {Number} nbworkers        Optional Number of workers.
- * @apiBody {String} logo             Optional base64 logo.
+ * @apiBody {String} name           Mandatory  name of the Organization.
+ * @apiBody {Array} customers        Mandatory Array of Customers.
  */
 OrganizationRoute.post("/", Interceptor, async (req: Request, res: Response) => {
     console.log(req.body)
@@ -85,8 +83,6 @@ OrganizationRoute.post("/", Interceptor, async (req: Request, res: Response) => 
             address: req.body.address,
             name: req.body.name,
             customers: [],
-            nbworkers : 0,
-            logo: '',
             createdAt: Date.now(),
             updatedAt: Date.now(),
             createdBy: tokenDecod.uid
@@ -96,8 +92,7 @@ OrganizationRoute.post("/", Interceptor, async (req: Request, res: Response) => 
         const updatedAdmin = await docAdmin.update({
             organization: FieldValue.arrayUnion(newOrga.id)
         });
-        console.log("docRef : " + newOrga.id);
-        res.status(200).send({ success: true, message: "Organisation Ajoutée" });
+        res.status(200).send({ success: true, message: "Organisation Ajoutée", record: newOrga.id });
     } catch (error: any) {
         console.log(error);
         res.status(400).send({ success: false, message: 'Une erreur est survenue durant l\'ajout d\'une organisation.', error: error });
