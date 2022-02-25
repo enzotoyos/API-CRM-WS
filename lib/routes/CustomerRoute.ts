@@ -109,7 +109,9 @@ CustomerRoute.get("/:id", async (req: Request, res: Response) => {
  * @apiBody {String} phone          Mandatory Lastname.
  * @apiBody {String} name           Mandatory First name of the User.
  * @apiBody {String} surname        Mandatory Lastname of the User.
- * @apiBody {String} file           Optionnal base 64 of a file.
+ * @apiBody {String} filename       Optionnal base 64 of a file.
+ * @apiBody {Number} Age            Optionnal age.
+ * @apiBody {Array} Appointement    Mandatory Array of Appointement.
  */
 CustomerRoute.post("/", async (req: Request, res: Response) => {
   try {
@@ -137,8 +139,6 @@ CustomerRoute.post("/", async (req: Request, res: Response) => {
 
 CustomerRoute.post("/upload", async (req, res) => {
   uploadImage(req.body.image);
-
-  res.status(200).send("ok");
 });
 
 const uploadImage = (data: string) => {

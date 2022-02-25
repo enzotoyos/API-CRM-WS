@@ -3,9 +3,37 @@ import { Router, Request, Response } from "express";
 import admin from "firebase-admin";
 import { getAuth } from "firebase-admin/auth";
 import { DocumentData, getFirestore } from "firebase-admin/firestore";
+import Interceptor from "../middleware/Interceptor";
+import TokenController from "../controller/TokenController";
+import AuthController from "../controller/AuthController";
 
 const db = getFirestore();
 const AdminRoute = Router();
+const AuthCtrl = new AuthController();
+const tokenCtrl = new TokenController();
+
+/** 
+ * @api {post} admin/ Post Admin
+ * @apiGroup Admin
+ * @apiName postAdmin
+ * @apiDescription Post Admin
+ * @apiPermission Token
+ *
+ */
+AdminRoute.post("/login", async (req: Request, res: Response) => {
+  console.log(req.body);
+  if (req.body.email && req.body.password) {
+    let record = await AuthCtrl.login(req.body.email, req.body.password);
+    if (record.success) {
+      record = await tokenCtrl.createToken(record.record.localId)
+      res.status(200).send(record);
+    } else {
+      res.status(500).send(record);
+    }
+  } else {
+    res.status(500).send({ sucess: false, message: 'Vous devez saisir vos identifiants.' });
+  }
+});
 
 /**
  * @api {get} admin/ Get Admin
@@ -15,8 +43,8 @@ const AdminRoute = Router();
  * @apiPermission Token
  *
  */
-AdminRoute.get("/", async (req: Request, res: Response) => {
-  var id: string = String(req.query.id);
+AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
+  var id: string = String(req.params.id);
   const userDoc = db.collection("admins").doc(id);
   const doc = await userDoc.get();
   if (!doc.exists) {
