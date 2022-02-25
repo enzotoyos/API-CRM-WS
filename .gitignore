@@ -7,3 +7,4 @@ package-lock.json
 apidoc/
 
 config/crm-ws-firebase-adminsdk.json
+./config/crm-ws-firebase-adminsdk.json
