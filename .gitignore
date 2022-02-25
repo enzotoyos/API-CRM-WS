@@ -5,3 +5,5 @@ package-lock.json
 .env
 
 apidoc/
+
+config/crm-ws-firebase-adminsdk.json
