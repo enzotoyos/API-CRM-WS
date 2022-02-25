@@ -1,4 +1,4 @@
-import express from "express";
+import express, { query } from "express";
 import { Router, Request, Response } from "express";
 import admin from "firebase-admin";
 import { getAuth } from "firebase-admin/auth";
@@ -6,19 +6,23 @@ import { DocumentData, getFirestore } from "firebase-admin/firestore";
 import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
 import AuthController from "../controller/AuthController";
+import MailController from "../controller/MailController";
 
 const db = getFirestore();
 const AdminRoute = Router();
 const AuthCtrl = new AuthController();
+const mailCtrl = new MailController();
 const tokenCtrl = new TokenController();
+const adminRef = db.collection('admins');
 
 /** 
- * @api {post} admin/ Post Admin
+ * @api {post} admin/login Login Admin
  * @apiGroup Admin
- * @apiName postAdmin
- * @apiDescription Post Admin
- * @apiPermission Token
+ * @apiName LoginAdmin
+ * @apiDescription Route permettant d'authentifier un administrateur
  *
+ * @apiBody {String} email          Mandatory Admin Email
+ * @apiBody {String} password       Mandatory Admin Password.
  */
 AdminRoute.post("/login", async (req: Request, res: Response) => {
   console.log(req.body);
@@ -65,45 +69,74 @@ AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
  * @apiName postAdmin
  * @apiDescription Post Admin
  * @apiPermission Token
- *
+ * 
+ * @apiBody {String} email              Mandatory Admin Email
+ * @apiBody {String} password           Mandatory Admin Password.
+ * @apiBody {String} name               Mandatory Admin Name.
+ * @apiBody {String} surname            Mandatory Admin Lastname.
+ * @apiBody {String} phone              Mandatory Admin phone.
  */
-AdminRoute.post("/", async (req: Request, res: Response) => {
-  console.log(req.body);
+AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   try {
-    const userRecord = await getAuth().createUser({
-      email: req.body.email,
-      emailVerified: false,
-      password: req.body.password,
-      displayName: req.body.name,
-      disabled: false,
-    });
-    console.log("Successfully created new user:", userRecord.uid);
+    const snapshot = await adminRef.where('createdBy', '==', String(tokenDecod.uid)).orderBy('createdAt', 'desc').limit(1).get();
 
-    const userDoc = db.collection("admins").doc(userRecord.uid);
-    const resultat = await userDoc.set({
-      email: req.body.email,
-      emailVerified: false,
-      name: req.body.name,
-      surname: req.body.surname,
-      phone: req.body.phone,
-      organization: [],
-      createdAt: Date.now(),
-      createdBy: "",
-    });
-
-    getAuth()
-      .generateEmailVerificationLink(req.body.email)
-      .then((link) => {
-        console.log("link", link);
-
-        res.status(200).send({
-          success: true,
-          message: "création réussi, un Email à été envoyé",
-        });
-      })
-      .catch((error) => {
-        res.status(403).send({ error: "erreur lors de l'envoi de l'email" });
+    const record = [];
+    if (snapshot.empty) {
+      console.log('No matching documents.');
+    } else {
+      snapshot.forEach(doc => {
+        record.push(doc.data());
+        console.log(doc.id, '=>', doc.data());
       });
+    }
+
+    const dateExpire = new Date(record[0].createdAt);
+    dateExpire.setMinutes(dateExpire.getMinutes() + 1);
+    // console.log(dateExpire.getTime() + ' > ' + new Date().getTime());
+
+    if (dateExpire.getTime() > new Date().getTime()) {
+      console.log("trop tot");
+    } else {
+      console.log("ok");
+    }
+
+
+    res.status(403).send({ success: true, message: "erreur lors de l'envoi de l'email", record: record });
+    // const userRecord = await getAuth().createUser({
+    //   email: req.body.email,
+    //   emailVerified: false,
+    //   password: req.body.password,
+    //   displayName: req.body.name,
+    //   disabled: false,
+    // });
+    // console.log("Successfully created new user:", userRecord.uid);
+
+    // const userDoc = adminRef.doc(userRecord.uid);
+    // const resultat = await userDoc.set({
+    //   email: req.body.email,
+    //   name: req.body.name,
+    //   surname: req.body.surname,
+    //   phone: req.body.phone,
+    //   organization: [],
+    //   createdAt: Date.now(),
+    //   createdBy: tokenDecod.uid,
+    // });
+
+    // getAuth()
+    //   .generateEmailVerificationLink(req.body.email)
+    //   .then((link) => {
+    //     console.log("link", link);
+
+    //     res.status(200).send({
+    //       success: true,
+    //       message: "création réussi, un Email à été envoyé",
+    //     });
+    //   })
+    //   .catch((error) => {
+    //     res.status(403).send({ error: "erreur lors de l'envoi de l'email" });
+    //   });
+
   } catch (error) {
     console.log("Error creating new user:", error);
     res.status(403).send(error.message);
