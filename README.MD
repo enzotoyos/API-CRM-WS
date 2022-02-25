@@ -27,4 +27,8 @@ NODE_ENV=
 
 # Clé d'encodage du JWT
 SECURE_KEY=
+
+# Configuration serveur SMTP
+EMAIL=
+EMAIL_PASSWORD=
 ```

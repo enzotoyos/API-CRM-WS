@@ -4,10 +4,17 @@ import { DocumentData, getFirestore } from "firebase-admin/firestore";
 import ICustomer from "../interface/ICustomer";
 import IResult from "../interface/IResult";
 import Interceptor from "../middleware/Interceptor";
+import MailController from "../controller/MailController";
 
 const CustomerRoute = Router();
 const db = getFirestore();
 const customerRef = db.collection('customers');
+const mailCtrl = new MailController();
+
+CustomerRoute.post("/mail", Interceptor, async (req: Request, res: Response) => {
+    mailCtrl.sendInitPwd('DEUPONT Jean', 'gaetan.patruno@ynov.com', 'monlink');
+    res.status(200).send({ success: true, message: "Un mail de validation a été envoyé", record: [] });
+});
 
 /**
  * @api {get} customer/ Get All Customer
