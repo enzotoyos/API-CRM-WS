@@ -12,6 +12,7 @@ var Jimp = require("jimp");
 var buffer = require("buffer");
 var path = require("path");
 import fs from "fs";
+import { error, warn } from "console";
 
 const CustomerRoute = Router();
 const db = getFirestore();
@@ -38,7 +39,6 @@ CustomerRoute.post(
  * @apiName getAllCustomer
  * @apiDescription Récupère tous les clients d'une organisation
  * @apiPermission Token
- *
  */
 CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
   let result: IResult = {
@@ -165,6 +165,21 @@ const uploadImage = (data: string) => {
     }
   );
   console.log("file", file);
+};
+
+const checkAutorisation = async (idAdmin: string, idOrganization: string) => {
+  //Création des requètes
+  const docUser = db.collection("admins").doc("idAdmin");
+  const doc = await docUser.get();
+
+  if (!doc.exists) {
+    throw new warn("Le document demandé est introuvable");
+  } else {
+    console.log("Document data:", doc.data());
+    const document = doc.data();
+    var result = document.include();
+    console.log(result);
+  }
 };
 
 export = CustomerRoute;
