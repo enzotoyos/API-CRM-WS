@@ -1,7 +1,8 @@
 import express from "express";
 import { Router, Request, Response } from "express";
 import admin from "firebase-admin";
-
+import { getAuth } from "firebase-admin/auth";
+import db from "firebase-admin/firestore";
 const AdminRoute = Router();
 
 /**
@@ -23,7 +24,34 @@ AdminRoute.get("/", async (req: Request, res: Response) => {});
  * @apiPermission Token
  *
  */
-AdminRoute.post("/", async (req: Request, res: Response) => {});
+AdminRoute.post("/", async (req: Request, res: Response) => {
+  console.log(req.body);
+  try {
+    const userRecord = await getAuth().createUser({
+      email: req.body.email,
+      emailVerified: false,
+      password: req.body.password,
+      displayName: req.body.name,
+      disabled: false,
+    });
+    console.log("Successfully created new user:", userRecord.uid);
+
+    const cityRef = db.collection("cities").doc("BJ");
+
+    const res = await cityRef.set(
+      {
+        capital: true,
+      },
+      { merge: true }
+    );
+
+    let result = { success: true, message: "création réussi " };
+    res.status(200).send(result);
+  } catch (error) {
+    console.log("Error creating new user:", error);
+    res.status(403).send(error.message);
+  }
+});
 
 /**
  * @api {post} admin/login Login Admin
