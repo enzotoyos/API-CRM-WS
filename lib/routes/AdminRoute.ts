@@ -11,7 +11,7 @@ import {
   getDoc,
   setDoc,
 } from "firebase/firestore";
-import TokenController = require('../controller/TokenController');
+import TokenController = require("../controller/TokenController");
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -66,52 +66,7 @@ AdminRoute.get("/", async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-AdminRoute.post("/", async (req: Request, res: Response) => {
-  const q = query(
-    collection(db, "admins"),
-    where("email", "==", req.body.email)
-  );
-  const querySnapshot = await getDocs(q);
-  var userID: string;
-
-  if (querySnapshot.empty == true) {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        req.body.email,
-        req.body.password
-      );
-      console.log(req.body);
-      const user = userCredential.user;
-      userID = user.uid + "";
-      console.log("user ID", userID);
-      const docRef = doc(db, "admins", userID);
-      setDoc(docRef, {
-        email: req.body.email,
-        phone: req.body.phone,
-        name: req.body.name,
-        surname: req.body.surname,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        organization: [],
-      });
-      let result = {
-        success: true,
-        message: "Utilisateur ajouté",
-        docRef: userID,
-      };
-      sendEmailVerification(auth.currentUser).then(() => {
-        res.status(200).send(result);
-      });
-    } catch (e) {
-      res.status(400).send({ "erreur lors de la création ": e });
-    }
-  } else {
-    let result = { success: false, message: "Utilisateur déjà existant" };
-    res.status(403).send(result);
-  }
-});
-
+AdminRoute.post("/", async (req: Request, res: Response) => {});
 
 /**
  * @api {post} admin/login Login Admin
@@ -119,21 +74,7 @@ AdminRoute.post("/", async (req: Request, res: Response) => {
  * @apiName LoginAdmin
  * @apiDescription login Admin
  */
-AdminRoute.post("/login", async (req: Request, res: Response) => {
-  if (req.body.email && req.body.password) {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, req.body.email, req.body.password);
-      // Signed in 
-      const user = userCredential.user;
-      const result = await tokenCtrl.createToken(user.uid);
-      res.status(200).send(result);
-    } catch (error) {
-      res.status(500).send({ success: false, message: 'Les identifiants sont incorrects.', error });
-    }
-  } else {
-    res.status(403).send({ success: false, message: 'Vous devez renseignez vous identifiants.' });
-  }
-});
+AdminRoute.post("/login", async (req: Request, res: Response) => {});
 
 /**
  * @api {put} admin/ update Admin
