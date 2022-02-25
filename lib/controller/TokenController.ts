@@ -1,27 +1,31 @@
+import { getFirestore } from 'firebase-admin/firestore';
 import jwt from 'jsonwebtoken';
 
-const secureKey = 'MySecureKey';
+const secureKey = (process.env.SECURE_KEY != undefined) ? process.env.SECURE_KEY : 'AZERTYUIOPKEY12345';
+
+const db = getFirestore();
 
 class TokenController {
 
     /**
      * @function createToken
      * 
-     * @param {string} login 
+     * @param {string} uid 
      */
-    async createToken(login: string): Promise<{
+    async createToken(uid: string): Promise<{
         success: boolean;
-        login: any;
         message: any;
         error: any[];
         expiresIn: any;
         result: any;
-        e_space: string;
     }> {
         let result: any = {};
 
         try {
             // Récupération des informations nécessaire
+            const docRef = doc(db, "admins", uid);
+            const docSnap = await getDoc(docRef);
+            console.log(docSnap.data());
 
             // Création de la date d'expiration
             const dateExpire = new Date();
@@ -29,8 +33,9 @@ class TokenController {
             dateExpire.setHours(dateExpire.getHours() + 1);
             //Création du Token
             const jwbToken: string = jwt.sign({
-                user: { name: "ok" },
-                expiresIn: dateExpire.toLocaleString('en-GB', { timeZone: 'Europe/Paris' })
+                admin: docSnap.data(),
+                uid: uid,
+                expiresIn: dateExpire
             }, secureKey);
 
             // Update Subscription pour mettre le token actuel dedans
@@ -41,7 +46,6 @@ class TokenController {
             return result;
         } catch (error: any) {
             console.log(error);
-
             result.success = false;
             result.message = 'Echec de la connexion';
             result.error.push({

@@ -4,9 +4,9 @@ import { FirebaseApp } from "firebase/app";
 import ICustomer from '../interface/ICustomer';
 import IResult from '../interface/IResult';
 import { addDoc, collection, doc, DocumentData, DocumentReference, getDoc, getDocs, getFirestore } from 'firebase/firestore';
+import Interceptor from '../middleware/Interceptor';
 
 const CustomerRoute = Router();
-
 const db = getFirestore();
 
 /**
@@ -17,7 +17,7 @@ const db = getFirestore();
  * @apiPermission Token
  * 
  */
-CustomerRoute.get('/', async (req: Request, res: Response) => {
+CustomerRoute.get('/', Interceptor, async (req: Request, res: Response) => {
     console.log('GET OK', req.params);
     let result: IResult = { success: true, message: '', record: [] };
 

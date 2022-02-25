@@ -1,6 +1,5 @@
 import express from "express";
 import { Router, Request, Response } from "express";
-import { FirebaseApp } from "firebase/app";
 import {
   addDoc,
   collection,
@@ -12,14 +11,18 @@ import {
   getDoc,
   setDoc,
 } from "firebase/firestore";
+import TokenController = require('../controller/TokenController');
 import {
   getAuth,
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 
 const AdminRoute = Router();
 const db = getFirestore();
+const auth = getAuth();
+const tokenCtrl = new TokenController();
 
 /**
  * @api {get} admin/ Get Admin
@@ -68,8 +71,6 @@ AdminRoute.post("/", async (req: Request, res: Response) => {
     collection(db, "admins"),
     where("email", "==", req.body.email)
   );
-
-  const auth = getAuth();
   const querySnapshot = await getDocs(q);
   var userID: string;
 
@@ -108,6 +109,29 @@ AdminRoute.post("/", async (req: Request, res: Response) => {
   } else {
     let result = { success: false, message: "Utilisateur déjà existant" };
     res.status(403).send(result);
+  }
+});
+
+
+/**
+ * @api {post} admin/login Login Admin
+ * @apiGroup Admin
+ * @apiName LoginAdmin
+ * @apiDescription login Admin
+ */
+AdminRoute.post("/login", async (req: Request, res: Response) => {
+  if (req.body.email && req.body.password) {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, req.body.email, req.body.password);
+      // Signed in 
+      const user = userCredential.user;
+      const result = await tokenCtrl.createToken(user.uid);
+      res.status(200).send(result);
+    } catch (error) {
+      res.status(500).send({ success: false, message: 'Les identifiants sont incorrects.', error });
+    }
+  } else {
+    res.status(403).send({ success: false, message: 'Vous devez renseignez vous identifiants.' });
   }
 });
 
