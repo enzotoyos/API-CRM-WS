@@ -15,8 +15,21 @@ const AdminRoute = Router();
  * @apiPermission Token
  *
  */
-
-AdminRoute.get("/", async (req: Request, res: Response) => {});
+AdminRoute.get("/", async (req: Request, res: Response) => {
+  var id: string = String(req.query.id);
+  const userDoc = db.collection("admins").doc(id);
+  const doc = await userDoc.get();
+  if (!doc.exists) {
+    console.log("No such document!");
+    res.status(403).send({
+      sucess: false,
+      message: "Aucun utilisateur ne correspond à cet ID ",
+    });
+  } else {
+    console.log("Document data:", doc.data());
+    res.status(200).send({ sucess: true, value: doc.data() });
+  }
+});
 
 /**
  * @api {post} admin/ Post Admin
@@ -46,7 +59,10 @@ AdminRoute.post("/", async (req: Request, res: Response) => {
       surname: req.body.surname,
       phone: req.body.phone,
       organization: [],
+      createdAt: Date.now(),
+      createdBy: "",
     });
+
     getAuth()
       .generateEmailVerificationLink(req.body.email)
       .then((link) => {
@@ -67,14 +83,6 @@ AdminRoute.post("/", async (req: Request, res: Response) => {
 });
 
 /**
- * @api {post} admin/login Login Admin
- * @apiGroup Admin
- * @apiName LoginAdmin
- * @apiDescription login Admin
- */
-AdminRoute.post("/login", async (req: Request, res: Response) => {});
-
-/**
  * @api {put} admin/ update Admin
  * @apiGroup Admin
  * @apiName getAdmin
@@ -83,6 +91,10 @@ AdminRoute.post("/login", async (req: Request, res: Response) => {});
  *
  */
 AdminRoute.put("/", async (req: Request, res: Response) => {
+  var id: string = String(req.query.id);
+
+  const cityRef = db.collection("cities").doc(id);
+  const resultat = await cityRef.update({ capital: true });
   let result = { success: true, message: "update ok " };
   res.status(200).send(result);
 });
@@ -96,8 +108,21 @@ AdminRoute.put("/", async (req: Request, res: Response) => {
  *
  */
 AdminRoute.delete("/", async (req: Request, res: Response) => {
-  let result = { success: true, message: "delete ok" };
-  res.status(200).send(result);
+  var id: string = String(req.query.id);
+
+  try {
+    getAuth().deleteUser(id);
+    console.log("Successfully deleted user");
+    const resultat = await db.collection("admins").doc(id).delete();
+    res
+      .status(200)
+      .send({ success: true, message: "Utilisateur supprimé avec succès" });
+  } catch (error) {
+    console.log("Error deleting user:", error);
+    res
+      .status(403)
+      .send({ success: false, message: "erreur lors de la suppression" });
+  }
 });
 
 export = AdminRoute;
