@@ -1,4 +1,4 @@
-interface IAdmin {
+interface IOrganization {
     address: string;
     customers: string[];
     name: string;
@@ -8,4 +8,4 @@ interface IAdmin {
     createdAt?: any;
 }
 
-export = IAdmin;
+export = IOrganization;
