@@ -10,10 +10,10 @@ const db = getFirestore();
 const customerRef = db.collection('customers');
 
 /**
- * @api {get} admin/ Get Admin
- * @apiGroup Admin
- * @apiName getAdmin
- * @apiDescription Get Admin
+ * @api {get} customer/ Get All Customer
+ * @apiGroup Customer
+ * @apiName getAllCustomer
+ * @apiDescription Récupère tous les clients d'une organisation
  * @apiPermission Token
  *
  */
@@ -33,10 +33,11 @@ CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
 });
 
 /**
- * @api {get} admin/:id Get Customer by Id
- * @apiGroup Admin
+ * @api {get} customer/:id Get Customer by Id
+ * @apiQuery {String} id    Id of the User
+ * @apiGroup Customer
  * @apiName getCustomerById
- * @apiDescription Get Customer
+ * @apiDescription Récupère un client par son Id
  * @apiPermission Token
  *
  */
@@ -59,23 +60,37 @@ CustomerRoute.get("/:id", async (req: Request, res: Response) => {
     }
 });
 
+/**
+ * @api {post} customer/ Add new Customer
+ * @apiGroup Customer
+ * @apiName postCustomer
+ * @apiDescription Ajoute un client dans une organisation
+ * @apiPermission Token
+ *
+ * @apiBody {String} email          Mandatory Email of the User.
+ * @apiBody {String} phone          Mandatory Lastname.
+ * @apiBody {String} name           Mandatory First name of the User.
+ * @apiBody {String} surname        Mandatory Lastname of the User.
+ * @apiBody {String} file           Optionnal base 64 of a file.
+ */
 CustomerRoute.post("/", async (req: Request, res: Response) => {
-    //   try {
-    //     const docRef = await addDoc(collection(db, "admins"), {
-    //       email: req.body.email,
-    //       phone: req.body.phone,
-    //       name: req.body.name,
-    //       surname: req.body.surname,
-    //       createdAt: Date.now(),
-    //       updatedAt: Date.now(),
-    //       organization: [],
-    //     });
-    //     console.log("docRef : " + docRef.id);
-    //     let result = { success: true, message: "Utilisateur Ajouté" };
-    //     res.status(200).send(result);
-    //   } catch (error: any) {
-    //     console.log(error);
-    //   }
+    try {
+        const newCusto = await customerRef.add({
+            email: req.body.email,
+            phone: req.body.phone,
+            name: req.body.name,
+            surname: req.body.surname,
+            filename: '',
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            createdBy: '',
+        });
+        console.log("docRef : " + newCusto.id);
+        res.status(200).send({ success: true, message: "Client Ajouté" });
+    } catch (error: any) {
+        console.log(error);
+        res.status(400).send({ success: false, message: 'Une erreur est survenue durant l\'ajout d\'un client.', error: error });
+    }
 });
 
 export = CustomerRoute;
