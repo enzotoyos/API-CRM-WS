@@ -36,14 +36,14 @@ AdminRoute.post("/", async (req: Request, res: Response) => {
     });
     console.log("Successfully created new user:", userRecord.uid);
 
-    const cityRef = db.collection("cities").doc("BJ");
+    // const cityRef = db.collection("cities").doc("BJ");
 
-    const res = await cityRef.set(
-      {
-        capital: true,
-      },
-      { merge: true }
-    );
+    // const res = await cityRef.set(
+    //   {
+    //     capital: true,
+    //   },
+    //   { merge: true }
+    // );
 
     let result = { success: true, message: "création réussi " };
     res.status(200).send(result);
