@@ -5,16 +5,32 @@ import ICustomer from "../interface/ICustomer";
 import IResult from "../interface/IResult";
 import Interceptor from "../middleware/Interceptor";
 import MailController from "../controller/MailController";
+import admin from "firebase-admin";
+import { v4 as uuidv4 } from "uuid";
+
+var Jimp = require("jimp");
+var buffer = require("buffer");
+var path = require("path");
+import fs from "fs";
 
 const CustomerRoute = Router();
 const db = getFirestore();
-const customerRef = db.collection('customers');
+const customerRef = db.collection("customers");
 const mailCtrl = new MailController();
+const storageRef = admin.storage().bucket(`crm-ws.appspot.com`);
 
-CustomerRoute.post("/mail", Interceptor, async (req: Request, res: Response) => {
-    mailCtrl.sendInitPwd('DEUPONT Jean', 'gaetan.patruno@ynov.com', 'monlink');
-    res.status(200).send({ success: true, message: "Un mail de validation a été envoyé", record: [] });
-});
+CustomerRoute.post(
+  "/mail",
+  Interceptor,
+  async (req: Request, res: Response) => {
+    mailCtrl.sendInitPwd("DEUPONT Jean", "gaetan.patruno@ynov.com", "monlink");
+    res.status(200).send({
+      success: true,
+      message: "Un mail de validation a été envoyé",
+      record: [],
+    });
+  }
+);
 
 /**
  * @api {get} customer/ Get All Customer
@@ -25,18 +41,26 @@ CustomerRoute.post("/mail", Interceptor, async (req: Request, res: Response) => 
  *
  */
 CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
-    let result: IResult = { success: true, message: "La récupération des clients a réussi.", record: [] };
+  let result: IResult = {
+    success: true,
+    message: "La récupération des clients a réussi.",
+    record: [],
+  };
 
-    try {
-        const snapshot = await customerRef.get();
-        snapshot.forEach(doc => {
-            result.record.push(doc.data());
-        });
-        res.status(200).send(result);
-    } catch (error: any) {
-        console.log(error);
-        res.status(400).send({ success: false, message: 'Une erreur est survenue durant la récupération d\'un client.', error: error });
-    }
+  try {
+    const snapshot = await customerRef.get();
+    snapshot.forEach((doc) => {
+      result.record.push(doc.data());
+    });
+    res.status(200).send(result);
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).send({
+      success: false,
+      message: "Une erreur est survenue durant la récupération d'un client.",
+      error: error,
+    });
+  }
 });
 
 /**
@@ -49,22 +73,29 @@ CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  *
  */
 CustomerRoute.get("/:id", async (req: Request, res: Response) => {
-    let result: IResult = { success: true, message: "La récupération du client a réussi." };
+  let result: IResult = {
+    success: true,
+    message: "La récupération du client a réussi.",
+  };
 
-    try {
-        const custoRef = customerRef.doc(req.params.id);
-        const doc = await custoRef.get();
-        if (!doc.exists) {
-            console.log('No such document!');
-            result.message = 'Aucun client correspondant';
-        } else {
-            result.result = doc.data();
-        }
-        res.status(200).send(result);
-    } catch (error: any) {
-        console.log(error);
-        res.status(400).send({ success: false, message: 'Une erreur est survenue durant la récupération d\'un client.', error: error });
+  try {
+    const custoRef = customerRef.doc(req.params.id);
+    const doc = await custoRef.get();
+    if (!doc.exists) {
+      console.log("No such document!");
+      result.message = "Aucun client correspondant";
+    } else {
+      result.result = doc.data();
     }
+    res.status(200).send(result);
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).send({
+      success: false,
+      message: "Une erreur est survenue durant la récupération d'un client.",
+      error: error,
+    });
+  }
 });
 
 /**
@@ -81,23 +112,57 @@ CustomerRoute.get("/:id", async (req: Request, res: Response) => {
  * @apiBody {String} file           Optionnal base 64 of a file.
  */
 CustomerRoute.post("/", async (req: Request, res: Response) => {
-    try {
-        const newCusto = await customerRef.add({
-            email: req.body.email,
-            phone: req.body.phone,
-            name: req.body.name,
-            surname: req.body.surname,
-            filename: '',
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-            createdBy: '',
-        });
-        console.log("docRef : " + newCusto.id);
-        res.status(200).send({ success: true, message: "Client Ajouté" });
-    } catch (error: any) {
-        console.log(error);
-        res.status(400).send({ success: false, message: 'Une erreur est survenue durant l\'ajout d\'un client.', error: error });
-    }
+  try {
+    const newCusto = await customerRef.add({
+      email: req.body.email,
+      phone: req.body.phone,
+      name: req.body.name,
+      surname: req.body.surname,
+      filename: "",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      createdBy: "",
+    });
+    console.log("docRef : " + newCusto.id);
+    res.status(200).send({ success: true, message: "Client Ajouté" });
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).send({
+      success: false,
+      message: "Une erreur est survenue durant l'ajout d'un client.",
+      error: error,
+    });
+  }
 });
+
+CustomerRoute.post("/upload", async (req, res) => {
+  uploadImage(req.body.image);
+
+  res.status(200).send("ok");
+});
+
+const uploadImage = (data: string) => {
+  var buf = Buffer.from(data, "base64");
+
+  const file = storageRef.file(
+    "customers" + "/" + uuidv4().toString() + ".png"
+  );
+
+  file.save(
+    buf,
+    {
+      contentType: "image/png",
+      metadata: { contentType: "image/png" },
+    },
+
+    (err) => {
+      if (err) {
+        throw err;
+      } else {
+        console.log("no way");
+      }
+    }
+  );
+};
 
 export = CustomerRoute;
