@@ -99,12 +99,50 @@ OrganizationRoute.post("/", Interceptor, async (req: Request, res: Response) => 
     }
 });
 
-OrganizationRoute.put('/', async (req: Request, res: Response) => {
+
+/**
+ * @api {put} organization/:id Modify an Organization
+ * @apiGroup Organization
+ * @apiName putOrganization
+ * @apiDescription Modifie une organization
+ * @apiPermission Token
+ *
+ * @apiBody {String} address           Mandatory address of the Organization.
+ * @apiBody {Array} customers          Mandatory  array of customers of the Organization.
+ * @apiBody {String} name              Mandatory name of the Organization.
+ * @apiBody {Number} nbworkers         Optional number of workers inside the Organization.
+ * @apiBody {String} logo              Optional logo of the Organization.
+ */
+ OrganizationRoute.put('/:id', async (req: Request, res: Response) => {
+    console.log(req.query.id);
+    
+    const orgaRef = organizationRef.doc(String(req.params.id));
+
+    const doc = await orgaRef.update({
+        address: req.body.address,
+        customers: req.body.customers,
+        name: req.body.name,
+        nbworkers : req.body.nbworkers,
+        logo: req.body.logo,
+        updatedAt: Date.now(),
+        createdAt: Date.now(),
+    });
+
     let result = { success: true, message: 'putOrganization' };
     res.status(200).send(result);
 });
 
-OrganizationRoute.delete('/', async (req: Request, res: Response) => {
+/**
+ * @api {delete} organization/:id delete an Organization
+ * @apiGroup Organization
+ * @apiName deleteOrganization
+ * @apiDescription supprime une organisation
+ * @apiPermission Token
+ */
+ OrganizationRoute.delete('/:id', async (req: Request, res: Response) => {
+
+    const doc = await organizationRef.doc(String(req.params.id)).delete();
+
     let result = { success: true, message: 'deleteOrganization' };
     res.status(200).send(result);
 });

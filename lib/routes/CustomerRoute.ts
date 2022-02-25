@@ -1,6 +1,10 @@
 import express from "express";
 import { Router, Request, Response } from "express";
-import { DocumentData, FieldValue, getFirestore } from "firebase-admin/firestore";
+import {
+    DocumentData,
+    FieldValue,
+    getFirestore,
+} from "firebase-admin/firestore";
 import ICustomer from "../interface/ICustomer";
 import IResult from "../interface/IResult";
 import Interceptor from "../middleware/Interceptor";
@@ -11,11 +15,12 @@ import { v4 as uuidv4 } from "uuid";
 
 const CustomerRoute = Router();
 const db = getFirestore();
-const adminRef = db.collection('admins');
-const customerRef = db.collection('customers');
-const orgaRef = db.collection('organizations');
+const adminRef = db.collection("admins");
+const customerRef = db.collection("customers");
+const orgaRef = db.collection("organizations");
 const mailCtrl = new MailController();
 const tokenCtrl = new TokenController();
+
 const storageRef = admin.storage().bucket(`crm-ws.appspot.com`);
 
 CustomerRoute.post(
@@ -119,7 +124,9 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
 
         const doc = await userDoc.get();
         if (!doc.exists) {
-            res.status(500).send({ success: false, message: "Votre compte Admin n'existe pas." });
+            res
+                .status(500)
+                .send({ success: false, message: "Votre compte Admin n'existe pas." });
         } else {
             const isOrga = doc.data().organization.includes(req.body.id);
             if (isOrga) {
@@ -128,7 +135,7 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
                     phone: req.body.phone,
                     name: req.body.name,
                     surname: req.body.surname,
-                    filename: '',
+                    filename: "",
                     age: 0,
                     appointement: [],
                     createdAt: Date.now(),
@@ -137,24 +144,44 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
                 });
                 const docOrga = orgaRef.doc(req.body.id);
                 await docOrga.update({
-                    customer: FieldValue.arrayUnion(newCusto.id)
+                    customer: FieldValue.arrayUnion(newCusto.id),
                 });
-                res.status(200).send({ success: true, message: "Le client a été ajouté dans l'organisation", record: newCusto.id });
+                res.status(200).send({
+                    success: true,
+                    message: "Le client a été ajouté dans l'organisation",
+                    record: newCusto.id,
+                });
             } else {
-                res.status(401).send({ success: false, message: "Votre n'avez pas accès a cette organisation." });
+                res.status(401).send({
+                    success: false,
+                    message: "Votre n'avez pas accès a cette organisation.",
+                });
             }
         }
-    } catch (error: any) {
-        console.log(error);
-        res.status(400).send({ success: false, message: 'Une erreur est survenue durant l\'ajout d\'un client.', error: error });
+    } catch (error) {
+        res.status(400).send({
+            success: false,
+            message: "Une erreur est survenue durant upload.",
+            error: error,
+        });
     }
 });
 
 CustomerRoute.post("/upload", async (req, res) => {
-    uploadImage(req.body.image);
-    res.status(200).send("good");
+    try {
+        uploadImage(req.body.image);
+        res.status(200).send("good");
 
+    } catch (error: any) {
+        console.log(error);
+        res.status(400).send({
+            success: false,
+            message: "Une erreur est survenue durant upload.",
+            error: error,
+        });
+    }
 });
+
 
 const uploadImage = (data: string) => {
     var buf = Buffer.from(data, "base64");
@@ -193,6 +220,5 @@ const checkAutorisation = async (idAdmin: string, idOrganization: string) => {
         console.log(result);
     }
 };
-
 
 export = CustomerRoute;
