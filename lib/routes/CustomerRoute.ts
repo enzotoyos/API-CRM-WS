@@ -139,6 +139,7 @@ CustomerRoute.post("/", async (req: Request, res: Response) => {
 
 CustomerRoute.post("/upload", async (req, res) => {
   uploadImage(req.body.image);
+  res.status(200).send("good");
 });
 
 const uploadImage = (data: string) => {
@@ -163,6 +164,7 @@ const uploadImage = (data: string) => {
       }
     }
   );
+  console.log("file", file);
 };
 
 export = CustomerRoute;
