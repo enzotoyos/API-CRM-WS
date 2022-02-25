@@ -49,7 +49,7 @@ const organizationRef = db.collection('organizations');
         const doc = await orgaRef.get();
         if (!doc.exists) {
             console.log('No such document!');
-            result.message = 'Aucune organisation correspondant';
+            result.message = 'Aucune organisation correspondante';
         } else {
             result.result = doc.data();
         }
@@ -68,8 +68,10 @@ const organizationRef = db.collection('organizations');
  * @apiPermission Token
  *
  * @apiBody {String} address          Mandatory address of the Organization.
- * @apiBody {String} name           Mandatory  name of the Organization.
- * @apiBody {Array} customers        Mandatory Array of Customers.
+ * @apiBody {String} name             Mandatory  name of the Organization.
+ * @apiBody {Array} customers         Mandatory Array of Customers.
+ * @apiBody {Number} nbworkers        Optional Number of workers.
+ * @apiBody {String} logo             Optional base64 logo.
  */
  OrganizationRoute.post("/", async (req: Request, res: Response) => {
      console.log(req.body)
@@ -78,6 +80,8 @@ const organizationRef = db.collection('organizations');
             address: req.body.address,
             name: req.body.name,
             customers: [],
+            nbworkers : 0,
+            logo: '',
             createdAt: Date.now(),
             createdBy: '',
         });
