@@ -32,6 +32,8 @@ app.use(function (req: any, res, next) {
 import AdminRoute from "./lib/routes/AdminRoute";
 import OrganizationRoute from "./lib/routes/OrganizationRoute";
 import CustomerRoute from "./lib/routes/CustomerRoute";
+import AppointementRoute from "./lib/routes/AppointementRoute";
+
 // ------------------------ Définition des Routes -------------------------
 // Route Principale
 app.get("/", (req: Request, res: Response) => {
@@ -49,6 +51,7 @@ app.get("/alive", (req: Request, res: Response) => {
 app.use("/admin", AdminRoute);
 app.use("/customer", CustomerRoute);
 app.use("/organization", OrganizationRoute);
+app.use("/appointement", AppointementRoute);
 
 //Démarrage de l'API
 const httpServer = http.createServer(app);
