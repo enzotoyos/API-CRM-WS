@@ -8,16 +8,17 @@ import Interceptor from "../middleware/Interceptor";
 const OrganizationRoute = Router();
 const db = getFirestore();
 const organizationRef = db.collection('organizations');
+
 /**
- * @api {get} organization/ Get Organization
- * @apiGroup organization
- * @apiName getOrganization
- * @apiDescription Get Organization
+ * @api {get} organization/ Get All Organization
+ * @apiGroup Organization
+ * @apiName getAllOrganization
+ * @apiDescription Récupère toutes les organisations
  * @apiPermission Token
- * 
+ *
  */
  OrganizationRoute.get("/", Interceptor, async (req: Request, res: Response) => {
-    let result: IResult = { success: true, message: "La récupération des organisation a réussi.", record: [] };
+    let result: IResult = { success: true, message: "La récupération des organisations a réussi.", record: [] };
 
     try {
         const snapshot = await organizationRef.get();
@@ -32,23 +33,23 @@ const organizationRef = db.collection('organizations');
 });
 
 /**
- * @api {get} admin/:id Get Customer by Id
- * @apiGroup Admin
- * @apiName getCustomerById
- * @apiDescription Get Customer
+ * @api {get} organization/:id Get Organization by Id
+ * @apiQuery {String} id    Id of the Organization
+ * @apiGroup Organization
+ * @apiName getOrganizationById
+ * @apiDescription Récupère une organisation par son Id
  * @apiPermission Token
  *
  */
-
  OrganizationRoute.get("/:id", async (req: Request, res: Response) => {
-    let result: IResult = { success: true, message: "La récupération d\'une organisation a réussi." };
+    let result: IResult = { success: true, message: "La récupération de l\'organisation a réussi." };
 
     try {
         const orgaRef = organizationRef.doc(req.params.id);
         const doc = await orgaRef.get();
         if (!doc.exists) {
             console.log('No such document!');
-            result.message = 'Aucune organisation correspondante';
+            result.message = 'Aucune organisation correspondant';
         } else {
             result.result = doc.data();
         }
@@ -59,25 +60,32 @@ const organizationRef = db.collection('organizations');
     }
 });
 
-OrganizationRoute.post('/', Interceptor, async (req: Request, res: Response) => {
-    let result: IResult = { success: true, message: "La création d\'une organisation a réussi.", record: [] };
-
+/**
+ * @api {post} organization/ Add new Organization
+ * @apiGroup Organization
+ * @apiName postOrganization
+ * @apiDescription Ajoute une organisation
+ * @apiPermission Token
+ *
+ * @apiBody {String} address          Mandatory address of the Organization.
+ * @apiBody {String} name           Mandatory  name of the Organization.
+ * @apiBody {Array} customers        Mandatory Array of Customers.
+ */
+ OrganizationRoute.post("/", async (req: Request, res: Response) => {
+     console.log(req.body)
     try {
-
-        const monDoc = await db.collection('organizations').add({
-            address: 'rue de narvik',
-            createdAt: '',
+        const newOrga = await organizationRef.add({
+            address: req.body.address,
+            name: req.body.name,
             customers: [],
-            name:'Ynov',
-            updatedAt : Date.now()
-          });
-          
-         
-
-        res.status(200).send(result);
+            createdAt: Date.now(),
+            createdBy: '',
+        });
+        console.log("docRef : " + newOrga.id);
+        res.status(200).send({ success: true, message: "Organisation Ajoutée" });
     } catch (error: any) {
         console.log(error);
-        res.status(400).send({ success: false, message: 'Une erreur est survenue durant la création d\'une organisation.', error: error });
+        res.status(400).send({ success: false, message: 'Une erreur est survenue durant l\'ajout d\'une organisation.', error: error });
     }
 });
 
