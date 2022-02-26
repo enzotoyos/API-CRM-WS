@@ -54,7 +54,7 @@ AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
   if (!doc.exists) {
     console.log("No such document!");
     res.status(403).send({
-      sucess: false,
+      success: false,
       message: "Aucun utilisateur ne correspond à cet ID ",
     });
   } else {
@@ -79,67 +79,47 @@ AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
 AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   try {
-    const snapshot = await adminRef.where('createdBy', '==', String(tokenDecod.uid)).orderBy('createdAt', 'desc').limit(1).get();
-
     const record = [];
-    if (snapshot.empty) {
-      console.log('No matching documents.');
-    } else {
+    const snapshot = await adminRef.where('createdBy', '==', String(tokenDecod.uid)).orderBy('createdAt', 'desc').limit(1).get();
+    if (!snapshot.empty) {
       snapshot.forEach(doc => {
         record.push(doc.data());
-        console.log(doc.id, '=>', doc.data());
       });
     }
 
     const dateExpire = new Date(record[0].createdAt);
     dateExpire.setMinutes(dateExpire.getMinutes() + 1);
-    // console.log(dateExpire.getTime() + ' > ' + new Date().getTime());
 
-    if (dateExpire.getTime() > new Date().getTime()) {
-      console.log("trop tot");
+    // isSpam = false we can create Admin
+    const isSpam = (dateExpire.getTime() > new Date().getTime());
+    if (!isSpam) {
+      const userRecord = await getAuth().createUser({
+        email: req.body.email,
+        emailVerified: false,
+        password: req.body.password,
+        displayName: req.body.name,
+        disabled: false,
+      });
+      const sLink = await getAuth().generateEmailVerificationLink(req.body.email);
+      mailCtrl.sendInitPwd(req.body.name + ' ' + req.body.surname, req.body.email, sLink);
+
+      adminRef.doc(userRecord.uid).set({
+        email: req.body.email,
+        name: req.body.name,
+        surname: req.body.surname,
+        phone: req.body.phone,
+        organization: [],
+        createdAt: Date.now(),
+        createdBy: tokenDecod.uid,
+      });
+
+      res.status(200).send({ success: true, message: "L'administrateur a bien été ajouté. Un email de validation a été envoyé.", record: userRecord.uid });
     } else {
-      console.log("ok");
+      res.status(403).send({ success: false, message: "Vous devez attendre 1 minute pour créer un autre admin." });
     }
-
-
-    res.status(403).send({ success: true, message: "erreur lors de l'envoi de l'email", record: record });
-    // const userRecord = await getAuth().createUser({
-    //   email: req.body.email,
-    //   emailVerified: false,
-    //   password: req.body.password,
-    //   displayName: req.body.name,
-    //   disabled: false,
-    // });
-    // console.log("Successfully created new user:", userRecord.uid);
-
-    // const userDoc = adminRef.doc(userRecord.uid);
-    // const resultat = await userDoc.set({
-    //   email: req.body.email,
-    //   name: req.body.name,
-    //   surname: req.body.surname,
-    //   phone: req.body.phone,
-    //   organization: [],
-    //   createdAt: Date.now(),
-    //   createdBy: tokenDecod.uid,
-    // });
-
-    // getAuth()
-    //   .generateEmailVerificationLink(req.body.email)
-    //   .then((link) => {
-    //     console.log("link", link);
-
-    //     res.status(200).send({
-    //       success: true,
-    //       message: "création réussi, un Email à été envoyé",
-    //     });
-    //   })
-    //   .catch((error) => {
-    //     res.status(403).send({ error: "erreur lors de l'envoi de l'email" });
-    //   });
-
   } catch (error) {
     console.log("Error creating new user:", error);
-    res.status(403).send(error.message);
+    res.status(403).send({ success: false, message: error.message });
   }
 });
 

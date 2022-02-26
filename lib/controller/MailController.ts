@@ -1,10 +1,10 @@
 require("dotenv").config();
-const nodemailer = require("nodemailer");
+import nodemailer from "nodemailer";
 import fs = require('fs');
 import * as path from 'path';
 
 const transporterOVH = nodemailer.createTransport({
-    host: "ssl0.ovh.net",
+    host: process.env.EMAIL_HOST,
     port: 465,
     secure: true, // true for 465, false for other ports
     auth: {
@@ -32,19 +32,9 @@ class MailController {
      */
     async sendInitPwd(fullname: string, email: string, link: string): Promise<boolean> {
         let result = false;
-        console.log('PROCESS ENV');
-        console.log(process.env.EMAIL);
-        // console.log(process.env);
 
         mailOptionsOVH.to = email;
         mailOptionsOVH.subject = 'Validation de l\'adresse mail pour l\'API CRM-WS.';
-        transporterOVH.verify(function (error, success) {
-            if (error) {
-                console.log(error);
-            } else {
-                console.log("Server is ready to take our messages");
-            }
-        });
         try {
             let pathToTemplate = path.resolve('./') + path.join('/', 'templates', 'mail', 'verifEmail.html');
             const tmpMailInit = fs.readFileSync(pathToTemplate, { encoding: 'utf8', flag: 'r' });
@@ -55,9 +45,10 @@ class MailController {
             template = template.replace('%LINK%', link);
             mailOptionsOVH.html = template;
 
-            let info = await transporterOVH.sendMail(mailOptionsOVH);
+            const info = await transporterOVH.sendMail(mailOptionsOVH);
             console.log(info);
             
+            result = true;
             return result;
         } catch (error) {
             console.log(error);
