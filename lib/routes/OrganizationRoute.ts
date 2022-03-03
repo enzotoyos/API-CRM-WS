@@ -200,18 +200,21 @@ OrganizationRoute.delete("/:id", async (req: Request, res: Response) => {
       let documentAdmins;
       orgaList.forEach((doc) => {
         idDocument = doc.id;
-
         documentAdmins = doc.data();
       });
 
+      //recupere dans l'array l'endroit ou  l'id est stocké
       const index = documentAdmins.organization.indexOf(req.params.id);
       if (index > -1) {
-        documentAdmins.organization.splice(index, 1); // 2nd parameter means remove one item only
+        documentAdmins.organization.splice(index, 1); // supprime l'id dans le tableau
         console.log(documentAdmins);
       }
-
-      const docRef = db.collection("admins").doc(idDocument);
-      await docRef.update(documentAdmins);
+      //push le json sur firebase dans 'admins'
+      const docRef = db
+        .collection("admins")
+        .doc(idDocument)
+        .update(documentAdmins);
+      //supprime le json dans 'Organisation'
       await organizationRef.doc(String(req.params.id)).delete();
 
       const result = { success: true, message: "deleteOrganization" };
