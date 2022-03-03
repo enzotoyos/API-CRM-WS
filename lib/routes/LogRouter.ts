@@ -18,12 +18,12 @@ LogRouter.get("/", Interceptor, async (req: Request, res: Response) => {
     const result: IResult = {
         success: true,
         message: "Test Log",
-        record: [],
+        record: null,
     };
 
-    const ea = await adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, String(req.query.id));
+    const ea = await adminCtrl.checkAutorisationCustForAdmin(tokenDecod.uid, String(req.query.id));
     console.log(ea);
-
+    result.record = ea;
     res.status(200).send(result);
 });
 
