@@ -1,11 +1,5 @@
-import express from "express";
 import { Router, Request, Response } from "express";
-import {
-  DocumentData,
-  getFirestore,
-  Timestamp,
-} from "firebase-admin/firestore";
-import IAppointement from "../interface/IAppointement";
+import { getFirestore } from "firebase-admin/firestore";
 import IResult from "../interface/IResult";
 import Interceptor from "../middleware/Interceptor";
 
@@ -22,7 +16,7 @@ const appointementRef = db.collection("appointements");
  *
  */
 AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
-  let result: IResult = {
+  const result: IResult = {
     success: true,
     message: "La récupération des rendez-vous a réussi.",
     record: [],
@@ -34,7 +28,7 @@ AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
       result.record.push(doc.data());
     });
     res.status(200).send(result);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.log(error);
     res.status(400).send({
       success: false,
@@ -55,7 +49,7 @@ AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  *
  */
 AppointementRoute.get("/:id", async (req: Request, res: Response) => {
-  let result: IResult = {
+  const result: IResult = {
     success: true,
     message: "La récupération du rendez-vous a réussi.",
   };
@@ -70,7 +64,7 @@ AppointementRoute.get("/:id", async (req: Request, res: Response) => {
       result.result = doc.data();
     }
     res.status(200).send(result);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.log(error);
     res.status(400).send({
       success: false,
@@ -94,29 +88,29 @@ AppointementRoute.get("/:id", async (req: Request, res: Response) => {
  */
 AppointementRoute.post("/", async (req: Request, res: Response) => {
   // vérification du bon format de la date
-  if (regexDate(req.body.date)!) {
+  if (regexDate(req.body.date) == false) {
     res
       .status(403)
       .send({ sucess: false, message: "format de la date incorrect" });
     return;
-  }
-
-  try {
-    const newAppoin = await appointementRef.add({
-      resume: req.body.resume,
-      date: req.body.date,
-      place: "",
-      createdAt: Date.now(),
-      createdBy: "",
-    });
-    res.status(200).send({ success: true, message: "Rendez-vous Ajouté" });
-  } catch (error: any) {
-    console.log(error);
-    res.status(400).send({
-      success: false,
-      message: "Une erreur est survenue durant l'ajout d'un rendez-vous.",
-      error: error,
-    });
+  } else {
+    try {
+      await appointementRef.add({
+        resume: req.body.resume,
+        date: req.body.date,
+        place: "",
+        createdAt: Date.now(),
+        createdBy: "",
+      });
+      res.status(200).send({ success: true, message: "Rendez-vous Ajouté" });
+    } catch (error: unknown) {
+      console.log(error);
+      res.status(400).send({
+        success: false,
+        message: "Une erreur est survenue durant l'ajout d'un rendez-vous.",
+        error: error,
+      });
+    }
   }
 });
 
@@ -136,7 +130,7 @@ AppointementRoute.put("/:id", async (req: Request, res: Response) => {
 
   const appoinRef = appointementRef.doc(String(req.params.id));
 
-  const doc = await appoinRef.update({
+  await appoinRef.update({
     resume: req.body.resume,
     date: req.body.date,
     place: req.body.place,
@@ -144,7 +138,7 @@ AppointementRoute.put("/:id", async (req: Request, res: Response) => {
     createdBy: "",
   });
 
-  let result = { success: true, message: "putAppointement" };
+  const result = { success: true, message: "putAppointement" };
   res.status(200).send(result);
 });
 
@@ -156,18 +150,18 @@ AppointementRoute.put("/:id", async (req: Request, res: Response) => {
  * @apiPermission Token
  */
 AppointementRoute.delete("/:id", async (req: Request, res: Response) => {
-  const doc = await appointementRef.doc(String(req.params.id)).delete();
+  await appointementRef.doc(String(req.params.id)).delete();
 
-  let result = { success: true, message: "deleteAppointement" };
+  const result = { success: true, message: "deleteAppointement" };
   res.status(200).send(result);
 });
 
 const regexDate = (date: string) => {
-  var regexDate = new RegExp(
+  const regexDate = new RegExp(
     /^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/
   );
 
-  var dateRegex = date.match(regexDate);
+  const dateRegex = date.match(regexDate);
   if (dateRegex) {
     return false;
   } else {

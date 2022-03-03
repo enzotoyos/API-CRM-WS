@@ -14,7 +14,8 @@ const Logger = LoggerManager(__filename);
 import * as Firebase from "./config/Firebase";
 Firebase;
 
-var bodyParser = require("body-parser");
+import bodyParser from "body-parser";
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -39,15 +40,15 @@ import AppointementRoute from "./lib/routes/AppointementRoute";
 // ------------------------ Définition des Routes -------------------------
 // Route Principale
 app.get("/", (req: Request, res: Response) => {
-    res.send(
-        "[" +
-        process.env.NODE_ENV +
-        "] - Welcome to CRM-WS API. You can find documentation to : <website>"
-    );
+  res.send(
+    "[" +
+      process.env.NODE_ENV +
+      "] - Welcome to CRM-WS API. You can find documentation to : <website>"
+  );
 });
 // Route qui vérifie que l'appli est toujours connecté
 app.get("/alive", (req: Request, res: Response) => {
-    res.send({ sucess: true });
+  res.send({ sucess: true });
 });
 // Définition des routes
 app.use("/admin", AdminRoute);
@@ -58,13 +59,18 @@ app.use("/appointement", AppointementRoute);
 //Démarrage de l'API
 const httpServer = http.createServer(app);
 httpServer.listen(process.env.PORT, () => {
-    Logger.info("INFO - CRM-WS [" + process.env.NODE_ENV + "] - API Started on port : " + process.env.PORT);
-    console.log(
-        "INFO - CRM-WS [" +
-        process.env.NODE_ENV +
-        "] - API Started on port : " +
-        process.env.PORT
-    );
+  Logger.info(
+    "INFO - CRM-WS [" +
+      process.env.NODE_ENV +
+      "] - API Started on port : " +
+      process.env.PORT
+  );
+  console.log(
+    "INFO - CRM-WS [" +
+      process.env.NODE_ENV +
+      "] - API Started on port : " +
+      process.env.PORT
+  );
 });
 
 export = app;
