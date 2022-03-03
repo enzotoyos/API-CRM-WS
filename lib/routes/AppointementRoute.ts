@@ -93,6 +93,7 @@ AppointementRoute.get("/:id", async (req: Request, res: Response) => {
  * @apiBody {String} place            Optional place of the Appointement.
  */
 AppointementRoute.post("/", async (req: Request, res: Response) => {
+  // vérification du bon format de la date
   if (regexDate(req.body.date)!) {
     res
       .status(403)
