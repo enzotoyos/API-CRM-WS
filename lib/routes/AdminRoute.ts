@@ -50,7 +50,7 @@ AdminRoute.post("/login", async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
+AdminRoute.get("/:id",Interceptor,async (req: Request, res: Response) => {
   var id: string = String(req.params.id);
   const userDoc = db.collection("admins").doc(id);
   const doc = await userDoc.get();
@@ -79,7 +79,7 @@ AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
  * @apiBody {String} surname            Mandatory Admin Lastname.
  * @apiBody {String} phone              Mandatory Admin phone.
  */
-AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
+AdminRoute.post("/",Interceptor,async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   try {
     const record = [];
@@ -134,7 +134,7 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-AdminRoute.put("/", async (req: Request, res: Response) => {
+AdminRoute.put("/",Interceptor, async (req: Request, res: Response) => {
   var id: string = String(req.query.id);
 
   const cityRef = db.collection("cities").doc(id);
@@ -151,7 +151,7 @@ AdminRoute.put("/", async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-AdminRoute.delete("/", async (req: Request, res: Response) => {
+AdminRoute.delete("/",Interceptor,async (req: Request, res: Response) => {
   var id: string = String(req.query.id);
 
   try {
