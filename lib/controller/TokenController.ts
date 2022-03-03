@@ -27,6 +27,8 @@ class TokenController {
             //On Ajoute 10 minutes
             // dateExpire.setHours(dateExpire.getHours() + 1);
             dateExpire.setMinutes(dateExpire.getMinutes() + 10);
+            console.log(doc.data().name);
+            
             //Création du Token
             const jwbToken: string = jwt.sign(
                 {
@@ -36,7 +38,7 @@ class TokenController {
                         email: doc.data().email,
                         emailVerified: doc.data().emailVerified,
                         surname: doc.data().surname,
-                        createdAt: doc.data().createdAt,
+                        createdAt: doc.data().createdAt
                     },
                     uid: uid,
                     expiresIn: dateExpire.getTime(),

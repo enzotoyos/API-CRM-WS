@@ -7,6 +7,9 @@ import * as dotenv from "dotenv";
 dotenv.config();
 const app: Application = express();
 
+import LoggerManager = require("./config/Logger");
+const Logger = LoggerManager(__filename);
+
 // Initialisation de Firebase
 import * as Firebase from "./config/Firebase";
 Firebase;
@@ -17,8 +20,6 @@ app.use(bodyParser.urlencoded());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(function (req: any, res, next) {
-    // console.log(req.useragent);
-
     res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
     res.header(
         "Access-Control-Allow-Headers",
@@ -56,6 +57,7 @@ app.use("/appointement", AppointementRoute);
 //Démarrage de l'API
 const httpServer = http.createServer(app);
 httpServer.listen(process.env.PORT, () => {
+    Logger.info("INFO - CRM-WS [" + process.env.NODE_ENV + "] - API Started on port : " + process.env.PORT);
     console.log(
         "INFO - CRM-WS [" +
         process.env.NODE_ENV +
