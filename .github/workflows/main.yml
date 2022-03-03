@@ -1,0 +1,38 @@
+name: Deploy API on Server
+
+on: 
+  push:
+    branches: 
+      - 'main'
+      
+jobs:
+  web-deploy:
+
+    name: Deploy API App
+    runs-on: ubuntu-latest
+    environment: development
+    
+    steps:
+    - name: Get latest code
+      uses: actions/checkout@v1
+
+    - name: Use Node.js 14 LTS
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+      
+    - name: Install NPM Modules
+      run: npm install
+
+    - name: Create .env File
+      run: | 
+        echo PORT=3000 >> .env
+        echo NODE_ENV=DEV >> .env
+        echo SECURE_KEY="CRMAPIWSKEY" >> .env
+        echo API_KEY="${{ secrets.API_KEY }}" >> .env
+
+    - name: Build Project
+      run: npm run build
+
+    - name: List Files
+      run: ls -al
