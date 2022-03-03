@@ -227,7 +227,7 @@ const uploadImage = (data: string, idClient: string) => {
             .then(async (signedUrls) => {
               const customerDoc = db.collection("customers").doc(idClient);
               const res = await customerDoc.update({
-                imageLink: signedUrls[0],
+                imageLink: FieldValue.arrayUnion(signedUrls[0]),
               });
               resolve(signedUrls);
             });
