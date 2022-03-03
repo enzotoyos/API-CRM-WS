@@ -94,7 +94,8 @@ OrganizationRoute.post(
   Interceptor,
   async (req: Request, res: Response) => {
     const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-    const message = testValueInBody(req.body.NbEmployees, req.body.logo);
+    const message = testValueInBody(req.body.address, req.body.name);
+    console.log(message);
 
     if (message === true) {
       try {
@@ -102,7 +103,7 @@ OrganizationRoute.post(
         const newOrga = await organizationRef.add({
           address: req.body.address,
           name: req.body.name,
-          NbEmployees: req.body.NbEmployees,
+          NbEmployees: req.body.NbEmployees ? req.body.NbEmployees : "0",
           customers: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -177,17 +178,53 @@ OrganizationRoute.put("/:id", async (req: Request, res: Response) => {
  * @apiPermission Token
  */
 OrganizationRoute.delete("/:id", async (req: Request, res: Response) => {
-  await organizationRef.doc(String(req.params.id)).delete();
+  if (req.params.id == null) {
+    const result = {
+      success: false,
+      message: "Suppression impossible. le champ ID est obligatoire",
+    };
+    res.status(200).send(result);
+  } else {
+    const orgaList = await db
+      .collection("admins")
+      .where("organization", "array-contains", req.params.id)
+      .get();
+    if (orgaList.empty) {
+      res.status(403).send({
+        sucess: false,
+        message: "aucun Admins correspond a cette organisation",
+      });
+      return;
+    } else {
+      let idDocument: string;
+      let documentAdmins;
+      orgaList.forEach((doc) => {
+        idDocument = doc.id;
 
-  const result = { success: true, message: "deleteOrganization" };
-  res.status(200).send(result);
+        documentAdmins = doc.data();
+      });
+
+      const index = documentAdmins.organization.indexOf(req.params.id);
+      if (index > -1) {
+        documentAdmins.organization.splice(index, 1); // 2nd parameter means remove one item only
+        console.log(documentAdmins);
+      }
+
+      const docRef = db.collection("admins").doc(idDocument);
+      await docRef.update(documentAdmins);
+      await organizationRef.doc(String(req.params.id)).delete();
+
+      const result = { success: true, message: "deleteOrganization" };
+      res.status(200).send(result);
+    }
+  }
 });
 
-const testValueInBody = (NbEmployees: string, logo: string) => {
-  if (NbEmployees === null) {
-    return "le champ email est manquant";
-  } else if (logo === null) {
-    return "le champ phone est manquant";
+const testValueInBody = (address: string, name: string) => {
+  if (address == null) {
+    return "le champ address est manquant";
+  } else if (name == null) {
+    return "le champ name est manquant";
   } else {
     return true;
   }
