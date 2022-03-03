@@ -1,11 +1,14 @@
 import { Router, Request, Response } from "express";
-import { getFirestore } from "firebase-admin/firestore";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import IResult from "../interface/IResult";
 import Interceptor from "../middleware/Interceptor";
+import TokenController from "../controller/TokenController";
 
 const AppointementRoute = Router();
 const db = getFirestore();
+const tokenCtrl = new TokenController();
 const appointementRef = db.collection("appointements");
+const custoRef = db.collection("customers");
 
 /**
  * @api {get} appointement/ Get All Appointement
@@ -48,7 +51,7 @@ AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-AppointementRoute.get("/:id", async (req: Request, res: Response) => {
+AppointementRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
   const result: IResult = {
     success: true,
     message: "La récupération du rendez-vous a réussi.",
@@ -86,23 +89,31 @@ AppointementRoute.get("/:id", async (req: Request, res: Response) => {
  * @apiBody {Timestamp} date          Mandatory  date of the Appointement.
  * @apiBody {String} place            Optional place of the Appointement.
  */
-AppointementRoute.post("/", async (req: Request, res: Response) => {
+AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => {
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   // vérification du bon format de la date
-  if (regexDate(req.body.date) == false) {
-    res
-      .status(403)
-      .send({ sucess: false, message: "format de la date incorrect" });
-    return;
+  // regexDate(req.body.date) == false
+  if (false) {
+    res.status(403).send({ sucess: false, message: "format de la date incorrect" });
   } else {
     try {
-      await appointementRef.add({
+      console.log(req.body);
+      console.log(tokenDecod.uid);
+      
+      const appaointDoc = await appointementRef.add({
         resume: req.body.resume,
         date: req.body.date,
-        place: "",
+        place: req.body.place,
         createdAt: Date.now(),
-        createdBy: "",
+        createdBy: tokenDecod.uid,
       });
-      res.status(200).send({ success: true, message: "Rendez-vous Ajouté" });
+
+      const docCusto = custoRef.doc(req.body.id);
+      await docCusto.update({
+        appointement: FieldValue.arrayUnion(appaointDoc.id),
+      });
+
+      res.status(200).send({ success: true, message: "Rendez-vous Ajouté", record: appaointDoc.id });
     } catch (error: unknown) {
       console.log(error);
       res.status(400).send({
@@ -125,7 +136,7 @@ AppointementRoute.post("/", async (req: Request, res: Response) => {
  * @apiBody {Timestamp} date          Mandatory  date of the Appointement.
  * @apiBody {String} place            Optional place of the Appointement.
  */
-AppointementRoute.put("/:id", async (req: Request, res: Response) => {
+AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
   console.log(req.query.id);
 
   const appoinRef = appointementRef.doc(String(req.params.id));
@@ -149,7 +160,7 @@ AppointementRoute.put("/:id", async (req: Request, res: Response) => {
  * @apiDescription supprime un rendez-vous
  * @apiPermission Token
  */
-AppointementRoute.delete("/:id", async (req: Request, res: Response) => {
+AppointementRoute.delete("/:id", Interceptor, async (req: Request, res: Response) => {
   await appointementRef.doc(String(req.params.id)).delete();
 
   const result = { success: true, message: "deleteAppointement" };
