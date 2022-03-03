@@ -1,5 +1,7 @@
 import * as express from 'express';
 import jwt from 'jsonwebtoken';
+import LoggerManager = require("../../config/Logger");
+const Logger = LoggerManager(__filename);
 
 const secureKey = (process.env.SECURE_KEY != undefined) ? process.env.SECURE_KEY : 'AZERTYUIOPKEY12345';
 
@@ -9,6 +11,7 @@ function TokenInterceptor(request: express.Request, response: express.Response, 
         //Si authorization est indéfinit cela fait planter l'API pour rien
         if (tokenHeader) {
             const tokenDecode: any = jwt.verify(tokenHeader, secureKey);
+            Logger.info(`${request.method}:${request.baseUrl}${request.path} UID : ${tokenDecode.uid} | Body : ${JSON.stringify(request.body)} Params : ${JSON.stringify(request.query)}`);
             console.log(`${request.method}:${request.baseUrl}${request.path} UID : ${tokenDecode.uid} | Body : ${JSON.stringify(request.body)} Params : ${JSON.stringify(request.query)}`);
             if (new Date(tokenDecode.expiresIn).getTime() > new Date().getTime()) {
                 //Token en cours de validité
@@ -21,7 +24,7 @@ function TokenInterceptor(request: express.Request, response: express.Response, 
             throw new Error('Votre jeton n\'est pas définit. Vous devez vous connecter.');
         }
     } catch (error: any) {
-        console.error(error);
+        Logger.error(error);
         response.status(401).json({
             success: false,
             message: "Problème d'authentification.",

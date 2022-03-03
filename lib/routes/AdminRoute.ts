@@ -7,6 +7,7 @@ import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
 import AuthController from "../controller/AuthController";
 import MailController from "../controller/MailController";
+import LoggerManager = require("../../config/Logger");
 
 const db = getFirestore();
 const AdminRoute = Router();
@@ -14,6 +15,7 @@ const AuthCtrl = new AuthController();
 const mailCtrl = new MailController();
 const tokenCtrl = new TokenController();
 const adminRef = db.collection('admins');
+const Logger = LoggerManager(__filename);
 
 /** 
  * @api {post} admin/login Login Admin
@@ -26,6 +28,7 @@ const adminRef = db.collection('admins');
  */
 AdminRoute.post("/login", async (req: Request, res: Response) => {
   console.log(req.body);
+  Logger.error(req.body);
   if (req.body.email && req.body.password) {
     let record = await AuthCtrl.login(req.body.email, req.body.password);
     if (record.success) {
