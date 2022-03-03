@@ -1,18 +1,11 @@
-import express from "express";
 import { Router, Request, Response } from "express";
-import {
-  DocumentData,
-  FieldValue,
-  getFirestore,
-} from "firebase-admin/firestore";
-import ICustomer from "../interface/ICustomer";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import IResult from "../interface/IResult";
 import Interceptor from "../middleware/Interceptor";
 import MailController from "../controller/MailController";
 import admin from "firebase-admin";
 import TokenController from "../controller/TokenController";
 import { v4 as uuidv4 } from "uuid";
-import { urlencoded } from "body-parser";
 
 const CustomerRoute = Router();
 const db = getFirestore();
@@ -45,7 +38,7 @@ CustomerRoute.post(
  * @apiPermission Token
  */
 CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
-  let result: IResult = {
+  const result: IResult = {
     success: true,
     message: "La récupération des clients a réussi.",
     record: [],
@@ -57,7 +50,7 @@ CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
       result.record.push(doc.data());
     });
     res.status(200).send(result);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.log(error);
     res.status(400).send({
       success: false,
@@ -77,7 +70,7 @@ CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  *
  */
 CustomerRoute.get("/:id", async (req: Request, res: Response) => {
-  let result: IResult = {
+  const result: IResult = {
     success: true,
     message: "La récupération du client a réussi.",
   };
@@ -93,7 +86,7 @@ CustomerRoute.get("/:id", async (req: Request, res: Response) => {
       result.result.imageUrl = await downloadCustomerImage(req.params.id);
     }
     res.status(200).send(result);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.log(error);
     res.status(400).send({
       success: false,
@@ -179,7 +172,7 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
  * @apiBody {String} image          Image en Base64
 
  */
-CustomerRoute.post("/upload", async (req, res) => {
+CustomerRoute.post("/upload", async (req: Request, res: Response) => {
   try {
     uploadImage(req.body.image, req.body.idCustomer).then(function (result) {
       res.status(200).send({
@@ -189,7 +182,7 @@ CustomerRoute.post("/upload", async (req, res) => {
         imageUrl: result[0],
       });
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.log(error);
     res.status(400).send({
       success: false,
@@ -200,8 +193,8 @@ CustomerRoute.post("/upload", async (req, res) => {
 });
 
 const uploadImage = (data: string, idClient: string) => {
-  return new Promise((resolve, reject) => {
-    var buf = Buffer.from(data, "base64");
+  return new Promise((resolve) => {
+    const buf = Buffer.from(data, "base64");
     const file = storageRef.file(
       "customersPhoto" + "/" + idClient + ";" + uuidv4() + ".png"
     );
@@ -226,7 +219,7 @@ const uploadImage = (data: string, idClient: string) => {
             })
             .then(async (signedUrls) => {
               const customerDoc = db.collection("customers").doc(idClient);
-              const res = await customerDoc.update({
+              await customerDoc.update({
                 imageLink: FieldValue.arrayUnion(signedUrls[0]),
               });
               resolve(signedUrls);
@@ -237,20 +230,18 @@ const uploadImage = (data: string, idClient: string) => {
   });
 };
 
-const downloadCustomerImage = (idCustomer: string) => {
-  return new Promise(async (resolve, reject) => {
-    let destFilename = "../../" + idCustomer + ".png";
-    const options = {
-      destination: destFilename,
-    };
+const downloadCustomerImage = async (idCustomer: string) => {
+  const destFilename = "../../" + idCustomer + ".png";
+  const options = {
+    destination: destFilename,
+  };
 
-    // Downloads the file
-    await admin
-      .storage()
-      .bucket(`crm-ws.appspot.com`)
-      .file("customersPhoto/" + idCustomer + ".png")
-      .download(options);
-  });
+  // Downloads the file
+  await admin
+    .storage()
+    .bucket(`crm-ws.appspot.com`)
+    .file("customersPhoto/" + idCustomer + ".png")
+    .download(options);
 };
 
 export = CustomerRoute;
