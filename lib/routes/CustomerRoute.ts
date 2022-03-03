@@ -142,7 +142,7 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
             name: req.body.name,
             surname: req.body.surname,
             imageLink: [],
-            age: 0,
+            age: req.body.age,
             appointement: [],
             createdAt: Date.now(),
             updatedAt: Date.now(),
@@ -271,9 +271,9 @@ const testValueInBody = (
     return "le champ email est manquant";
   } else if (phone === null) {
     return "le champ phone est manquant";
-  } else if (name) {
+  } else if (!name) {
     return "le champ name est manquant";
-  } else if (surname) {
+  } else if (!surname) {
     return "le champ surname est manquant";
   } else {
     return true;

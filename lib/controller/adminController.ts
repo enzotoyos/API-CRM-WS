@@ -9,6 +9,7 @@ import IResult from "../interface/IResult";
 
 const db = getFirestore();
 const adminRef = db.collection("admins");
+const orgaRef = db.collection("organizations");
 
 class AdminController {
 
@@ -35,45 +36,48 @@ class AdminController {
     /**
      * checkAutorisationCustForAdmin
      * 
-     * @param idCustomer 
+     * UIDadmin -> Récupération des organisations 
+     * 
+     * @param idAdmin 
      * @param idOrganization 
      * @returns 
      */
-    async checkAutorisationCustForAdmin(idCustomer: string, idOrganization: string) {
-        //Création des requètes
-        var idOrga: string;
-        var idClient: string;
-        const userDoc = db.collection("organizations");
-        const snapshot = await userDoc.where("customer", "in", [[idCustomer]]).get();
-        if (snapshot.empty) {
-            console.log("No matching documents.");
-            return false;
-        } else {
-            snapshot.forEach((doc) => {
-                idOrga = doc.id;
-                console.log(idOrga);
-            });
+    async checkAutorisationCustForAdmin(idAdmin: string, idCustomer: string): Promise<boolean> {
+        let result = false;
 
-            const adminDoc = db.collection("admins");
-            const docAdmin = await adminDoc
-                .where("organization", "in", [[idOrga]])
-                .get();
-            if (docAdmin.empty) {
-                console.log("No matching documents. 2");
-                return false;
-            } else {
-                snapshot.forEach((doc) => {
-                    idClient = doc.id;
-                    console.log(idClient);
-                });
+        const docUser = adminRef.doc(idAdmin);
+        const doc = await docUser.get();
+        const listIdOrga: String[] = doc.data().organization;
+
+        for (let index in listIdOrga) {
+            const docOrga = orgaRef.doc(String(listIdOrga[index]));
+            const doc = await docOrga.get();
+            if (doc.data().customer && doc.data().customer.length > 0) {
+                result = doc.data().customer.includes(idCustomer);
             }
-            if (idOrga == idClient) {
-                return true;
-            } else {
-                return false;
+
+            if (result) {
+                break;
             }
         }
-    };
+
+        return result;
+    }
+
+    /**
+     * checkAutorisationRdvForAdmin
+     * 
+     * UIDadmin -> Récupération des organisations 
+     * 
+     * @param idAdmin 
+     * @param idRdv
+     * @returns 
+     */
+    async checkAutorisationRdvForAdmin(idAdmin: string, idRdv: string): Promise<boolean> {
+        let result = false;
+
+        return result;
+    }
 
     /**
      * login
@@ -150,6 +154,7 @@ class AdminController {
         });
     }
 }
+
 
 
 export = AdminController;
