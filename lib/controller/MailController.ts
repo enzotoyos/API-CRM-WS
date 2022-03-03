@@ -10,7 +10,7 @@ const Logger = LoggerManager(__filename);
 const transporterGmail = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'gaetan.patruno@gmail.com', // adresse mail ovh
+        user: process.env.EMAIL, // adresse mail ovh
         pass: process.env.EMAIL_PASSWORD, // password ovh
     },
 });
@@ -38,7 +38,7 @@ class MailController {
             template = template.replace('%LINK%', link);
 
             let mailOptionsOVH = {
-                from: 'gaetan.patruno@gmail.com',
+                from: process.env.EMAIL,
                 to: email,
                 subject: 'Validation de l\'adresse mail pour l\'API CRM-WS.',
                 html: template

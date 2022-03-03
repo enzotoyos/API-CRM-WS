@@ -5,13 +5,13 @@ import { getAuth } from "firebase-admin/auth";
 import { DocumentData, getFirestore } from "firebase-admin/firestore";
 import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
-import AuthController from "../controller/AuthController";
+import AdminController from "../controller/AdminController";
 import MailController from "../controller/MailController";
 import LoggerManager = require("../../config/Logger");
 
 const db = getFirestore();
 const AdminRoute = Router();
-const AuthCtrl = new AuthController();
+const AuthCtrl = new AdminController();
 const mailCtrl = new MailController();
 const tokenCtrl = new TokenController();
 const adminRef = db.collection('admins');
@@ -50,7 +50,7 @@ AdminRoute.post("/login", async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-AdminRoute.get("/:id",Interceptor,async (req: Request, res: Response) => {
+AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
   var id: string = String(req.params.id);
   const userDoc = db.collection("admins").doc(id);
   const doc = await userDoc.get();
@@ -79,7 +79,7 @@ AdminRoute.get("/:id",Interceptor,async (req: Request, res: Response) => {
  * @apiBody {String} surname            Mandatory Admin Lastname.
  * @apiBody {String} phone              Mandatory Admin phone.
  */
-AdminRoute.post("/",Interceptor,async (req: Request, res: Response) => {
+AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   try {
     const record = [];
@@ -90,11 +90,14 @@ AdminRoute.post("/",Interceptor,async (req: Request, res: Response) => {
       });
     }
 
-    const dateExpire = new Date(record[0].createdAt);
-    dateExpire.setMinutes(dateExpire.getMinutes() + 1);
+    let isSpam = false;
+    if (record.length > 0) {
+      const dateExpire = new Date(record[0].createdAt);
+      dateExpire.setMinutes(dateExpire.getMinutes() + 1);
+      isSpam = (dateExpire.getTime() > new Date().getTime());
+    }
 
     // isSpam = false we can create Admin
-    const isSpam = (dateExpire.getTime() > new Date().getTime());
     if (!isSpam) {
       const userRecord = await getAuth().createUser({
         email: req.body.email,
@@ -134,7 +137,7 @@ AdminRoute.post("/",Interceptor,async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-AdminRoute.put("/",Interceptor, async (req: Request, res: Response) => {
+AdminRoute.put("/", Interceptor, async (req: Request, res: Response) => {
   var id: string = String(req.query.id);
 
   const cityRef = db.collection("cities").doc(id);
@@ -151,7 +154,7 @@ AdminRoute.put("/",Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-AdminRoute.delete("/",Interceptor,async (req: Request, res: Response) => {
+AdminRoute.delete("/", Interceptor, async (req: Request, res: Response) => {
   var id: string = String(req.query.id);
 
   try {
