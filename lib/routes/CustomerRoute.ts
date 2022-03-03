@@ -112,52 +112,69 @@ CustomerRoute.get("/:id", async (req: Request, res: Response) => {
  * @apiBody {Number} Age            Optionnal age.
  */
 CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
-  try {
-    console.log(req.body);
-    const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-    const userDoc = adminRef.doc(tokenDecod.uid);
+  const message = testValueInBody(
+    req.body.email,
+    req.body.phone,
+    req.body.name,
+    req.body.surname
+  );
 
-    const doc = await userDoc.get();
-    if (!doc.exists) {
-      res
-        .status(500)
-        .send({ success: false, message: "Votre compte Admin n'existe pas." });
-    } else {
-      const isOrga = doc.data().organization.includes(req.body.id);
-      if (isOrga) {
-        const newCusto = await customerRef.add({
-          email: req.body.email,
-          phone: req.body.phone,
-          name: req.body.name,
-          surname: req.body.surname,
-          imageLink: [],
-          age: 0,
-          appointement: [],
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          createdBy: tokenDecod.uid,
-        });
-        const docOrga = orgaRef.doc(req.body.id);
-        await docOrga.update({
-          customer: FieldValue.arrayUnion(newCusto.id),
-        });
-        res.status(200).send({
-          success: true,
-          message: "Le client a été ajouté dans l'organisation",
-          record: newCusto.id,
-        });
+  if (message === true) {
+    try {
+      console.log(req.body);
+      const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+      const userDoc = adminRef.doc(tokenDecod.uid);
+
+      const doc = await userDoc.get();
+      if (!doc.exists) {
+        res
+          .status(500)
+          .send({
+            success: false,
+            message: "Votre compte Admin n'existe pas.",
+          });
       } else {
-        res.status(401).send({
-          success: false,
-          message: "Votre n'avez pas accès a cette organisation.",
-        });
+        const isOrga = doc.data().organization.includes(req.body.id);
+        if (isOrga) {
+          const newCusto = await customerRef.add({
+            email: req.body.email,
+            phone: req.body.phone,
+            name: req.body.name,
+            surname: req.body.surname,
+            imageLink: [],
+            age: 0,
+            appointement: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            createdBy: tokenDecod.uid,
+          });
+          const docOrga = orgaRef.doc(req.body.id);
+          await docOrga.update({
+            customer: FieldValue.arrayUnion(newCusto.id),
+          });
+          res.status(200).send({
+            success: true,
+            message: "Le client a été ajouté dans l'organisation",
+            record: newCusto.id,
+          });
+        } else {
+          res.status(401).send({
+            success: false,
+            message: "Votre n'avez pas accès a cette organisation.",
+          });
+        }
       }
+    } catch (error) {
+      res.status(400).send({
+        success: false,
+        message: "Une erreur est survenue durant upload.",
+        error: error,
+      });
     }
-  } catch (error) {
-    res.status(400).send({
+  } else {
+    res.status(403).send({
       success: false,
-      message: "Une erreur est survenue durant upload.",
-      error: error,
+      error: message,
     });
   }
 });
@@ -242,6 +259,25 @@ const downloadCustomerImage = async (idCustomer: string) => {
     .bucket(`crm-ws.appspot.com`)
     .file("customersPhoto/" + idCustomer + ".png")
     .download(options);
+};
+
+const testValueInBody = (
+  email: string,
+  phone: number,
+  name: string,
+  surname: string
+) => {
+  if (email === null) {
+    return "le champ email est manquant";
+  } else if (phone === null) {
+    return "le champ phone est manquant";
+  } else if (name) {
+    return "le champ name est manquant";
+  } else if (surname) {
+    return "le champ surname est manquant";
+  } else {
+    return true;
+  }
 };
 
 export = CustomerRoute;

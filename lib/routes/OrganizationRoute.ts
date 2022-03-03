@@ -93,34 +93,45 @@ OrganizationRoute.post(
   "/",
   Interceptor,
   async (req: Request, res: Response) => {
-    console.log(req.body);
     const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-    try {
-      // On crée une organisation
-      const newOrga = await organizationRef.add({
-        address: req.body.address,
-        name: req.body.name,
-        customers: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        createdBy: tokenDecod.uid,
-      });
-      // Puis on l'ajoute dans le tableau de l'admin
-      const docAdmin = adminRef.doc(tokenDecod.uid);
-      await docAdmin.update({
-        organization: FieldValue.arrayUnion(newOrga.id),
-      });
-      res.status(200).send({
-        success: true,
-        message: "Organisation Ajoutée",
-        record: newOrga.id,
-      });
-    } catch (error: unknown) {
-      console.log(error);
-      res.status(400).send({
+    const message = testValueInBody(req.body.NbEmployees, req.body.logo);
+
+    if (message === true) {
+      try {
+        // On crée une organisation
+        const newOrga = await organizationRef.add({
+          address: req.body.address,
+          name: req.body.name,
+          NbEmployees: req.body.NbEmployees,
+          customers: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          createdBy: tokenDecod.uid,
+          logo: [],
+        });
+        // Puis on l'ajoute dans le tableau de l'admin
+        const docAdmin = adminRef.doc(tokenDecod.uid);
+        await docAdmin.update({
+          organization: FieldValue.arrayUnion(newOrga.id),
+        });
+        res.status(200).send({
+          success: true,
+          message: "Organisation Ajoutée",
+          record: newOrga.id,
+        });
+      } catch (error: unknown) {
+        console.log(error);
+        res.status(400).send({
+          success: false,
+          message: "Une erreur est survenue durant l'ajout d'une organisation.",
+          error: error,
+        });
+      }
+    } else {
+      res.status(403).send({
         success: false,
         message: "Une erreur est survenue durant l'ajout d'une organisation.",
-        error: error,
+        error: message,
       });
     }
   }
@@ -171,5 +182,15 @@ OrganizationRoute.delete("/:id", async (req: Request, res: Response) => {
   const result = { success: true, message: "deleteOrganization" };
   res.status(200).send(result);
 });
+
+const testValueInBody = (NbEmployees: string, logo: string) => {
+  if (NbEmployees === null) {
+    return "le champ email est manquant";
+  } else if (logo === null) {
+    return "le champ phone est manquant";
+  } else {
+    return true;
+  }
+};
 
 export = OrganizationRoute;

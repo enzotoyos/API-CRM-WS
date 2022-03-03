@@ -14,10 +14,10 @@ const AdminRoute = Router();
 const AuthCtrl = new AdminController();
 const mailCtrl = new MailController();
 const tokenCtrl = new TokenController();
-const adminRef = db.collection('admins');
+const adminRef = db.collection("admins");
 const Logger = LoggerManager(__filename);
 
-/** 
+/**
  * @api {post} admin/login Login Admin
  * @apiGroup Admin
  * @apiName LoginAdmin
@@ -32,13 +32,15 @@ AdminRoute.post("/login", async (req: Request, res: Response) => {
   if (req.body.email && req.body.password) {
     let record = await AuthCtrl.login(req.body.email, req.body.password);
     if (record.success) {
-      record = await tokenCtrl.createToken(record.record.localId)
+      record = await tokenCtrl.createToken(record.record.localId);
       res.status(200).send(record);
     } else {
       res.status(500).send(record);
     }
   } else {
-    res.status(500).send({ sucess: false, message: 'Vous devez saisir vos identifiants.' });
+    res
+      .status(500)
+      .send({ sucess: false, message: "Vous devez saisir vos identifiants." });
   }
 });
 
@@ -72,7 +74,7 @@ AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
  * @apiName postAdmin
  * @apiDescription Post Admin
  * @apiPermission Token
- * 
+ *
  * @apiBody {String} email              Mandatory Admin Email
  * @apiBody {String} password           Mandatory Admin Password.
  * @apiBody {String} name               Mandatory Admin Name.
@@ -83,9 +85,13 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   try {
     const record = [];
-    const snapshot = await adminRef.where('createdBy', '==', String(tokenDecod.uid)).orderBy('createdAt', 'desc').limit(1).get();
+    const snapshot = await adminRef
+      .where("createdBy", "==", String(tokenDecod.uid))
+      .orderBy("createdAt", "desc")
+      .limit(1)
+      .get();
     if (!snapshot.empty) {
-      snapshot.forEach(doc => {
+      snapshot.forEach((doc) => {
         record.push(doc.data());
       });
     }
@@ -106,8 +112,14 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
         displayName: req.body.name,
         disabled: false,
       });
-      const sLink = await getAuth().generateEmailVerificationLink(req.body.email);
-      mailCtrl.sendInitPwd(req.body.name + ' ' + req.body.surname, req.body.email, sLink);
+      const sLink = await getAuth().generateEmailVerificationLink(
+        req.body.email
+      );
+      mailCtrl.sendInitPwd(
+        req.body.name + " " + req.body.surname,
+        req.body.email,
+        sLink
+      );
 
       adminRef.doc(userRecord.uid).set({
         email: req.body.email,
@@ -119,9 +131,17 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
         createdBy: tokenDecod.uid,
       });
 
-      res.status(200).send({ success: true, message: "L'administrateur a bien été ajouté. Un email de validation a été envoyé.", record: userRecord.uid });
+      res.status(200).send({
+        success: true,
+        message:
+          "L'administrateur a bien été ajouté. Un email de validation a été envoyé.",
+        record: userRecord.uid,
+      });
     } else {
-      res.status(403).send({ success: false, message: "Vous devez attendre 1 minute pour créer un autre admin." });
+      res.status(403).send({
+        success: false,
+        message: "Vous devez attendre 1 minute pour créer un autre admin.",
+      });
     }
   } catch (error) {
     console.log("Error creating new user:", error);
@@ -137,12 +157,20 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-AdminRoute.put("/", Interceptor, async (req: Request, res: Response) => {
-  var id: string = String(req.query.id);
+AdminRoute.put("/:id", async (req: Request, res: Response) => {
+  console.log(req.query.id);
 
-  const cityRef = db.collection("cities").doc(id);
-  const resultat = await cityRef.update({ capital: true });
-  let result = { success: true, message: "update ok " };
+  const admRef = adminRef.doc(String(req.params.id));
+
+  await admRef.update({
+    resume: req.body.resume,
+    date: req.body.date,
+    place: req.body.place,
+    createdAt: Date.now(),
+    createdBy: "",
+  });
+
+  const result = { success: true, message: "putAdmin" };
   res.status(200).send(result);
 });
 
@@ -155,20 +183,26 @@ AdminRoute.put("/", Interceptor, async (req: Request, res: Response) => {
  *
  */
 AdminRoute.delete("/", Interceptor, async (req: Request, res: Response) => {
-  var id: string = String(req.query.id);
+  const id: string = String(req.params.id);
 
-  try {
-    getAuth().deleteUser(id);
-    console.log("Successfully deleted user");
-    const resultat = await db.collection("admins").doc(id).delete();
-    res
-      .status(200)
-      .send({ success: true, message: "Utilisateur supprimé avec succès" });
-  } catch (error) {
-    console.log("Error deleting user:", error);
+  if (req.params.id === null)
+    try {
+      getAuth().deleteUser(id);
+      console.log("Successfully deleted user");
+      await db.collection("admins").doc(id).delete();
+      res
+        .status(200)
+        .send({ success: true, message: "Utilisateur supprimé avec succès" });
+    } catch (error: unknown) {
+      console.log("Error deleting user:", error);
+      res
+        .status(403)
+        .send({ success: false, message: "erreur lors de la suppression" });
+    }
+  else {
     res
       .status(403)
-      .send({ success: false, message: "erreur lors de la suppression" });
+      .send({ success: false, message: "erreur aucun ID entrez en paramètre" });
   }
 });
 

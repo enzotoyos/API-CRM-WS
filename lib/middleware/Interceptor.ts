@@ -44,7 +44,7 @@ function TokenInterceptor(
         "Votre jeton n'est pas définit. Vous devez vous connecter."
       );
     }
-  } catch (error: unknown) {
+  } catch (error: any) {
     Logger.error(error);
     response.status(401).json({
       success: false,
@@ -52,7 +52,7 @@ function TokenInterceptor(
       error: [
         {
           code: "MIDDLEWARE",
-          title: error,
+          title: error.message,
         },
       ],
     });
