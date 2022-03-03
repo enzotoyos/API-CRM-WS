@@ -134,12 +134,20 @@ AdminRoute.post("/",Interceptor,async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-AdminRoute.put("/",Interceptor, async (req: Request, res: Response) => {
-  var id: string = String(req.query.id);
+AdminRoute.put("/:id", async (req: Request, res: Response) => {
+  console.log(req.query.id);
 
-  const cityRef = db.collection("cities").doc(id);
-  const resultat = await cityRef.update({ capital: true });
-  let result = { success: true, message: "update ok " };
+  const admRef = adminRef.doc(String(req.params.id));
+
+  await admRef.update({
+    resume: req.body.resume,
+    date: req.body.date,
+    place: req.body.place,
+    createdAt: Date.now(),
+    createdBy: "",
+  });
+
+  const result = { success: true, message: "putAdmin" };
   res.status(200).send(result);
 });
 
