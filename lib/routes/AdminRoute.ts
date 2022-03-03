@@ -24,13 +24,13 @@ const Logger = LoggerManager(__filename);
  * @apiDescription Route permettant d'authentifier un administrateur
  *
  * @apiBody {String} email          Mandatory Admin Email
- * @apiBody {String} password       Mandatory Admin Password.
+ * @apiBody {String} api_key       Mandatory Admin Api Key.
  */
 AdminRoute.post("/login", async (req: Request, res: Response) => {
   console.log(req.body);
   Logger.error(req.body);
-  if (req.body.email && req.body.password) {
-    let record = await AuthCtrl.login(req.body.email, req.body.password);
+  if (req.body.email && req.body.api_key) {
+    let record = await AuthCtrl.login(req.body.email, req.body.api_key);
     if (record.success) {
       record = await tokenCtrl.createToken(record.record.localId);
       res.status(200).send(record);
@@ -76,12 +76,15 @@ AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  * @apiBody {String} email              Mandatory Admin Email
- * @apiBody {String} password           Mandatory Admin Password.
  * @apiBody {String} name               Mandatory Admin Name.
  * @apiBody {String} surname            Mandatory Admin Lastname.
  * @apiBody {String} phone              Mandatory Admin phone.
  */
 AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
+
+  const api_key = tokenCtrl.makeRandomHash(20);
+  console.log("api key", api_key);
+  
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   try {
     const record = [];
@@ -108,7 +111,7 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
       const userRecord = await getAuth().createUser({
         email: req.body.email,
         emailVerified: false,
-        password: req.body.password,
+        password: api_key,
         displayName: req.body.name,
         disabled: false,
       });
@@ -123,6 +126,7 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
 
       adminRef.doc(userRecord.uid).set({
         email: req.body.email,
+        api_key: api_key,
         name: req.body.name,
         surname: req.body.surname,
         phone: req.body.phone,
@@ -136,6 +140,7 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
         message:
           "L'administrateur a bien été ajouté. Un email de validation a été envoyé.",
         record: userRecord.uid,
+        api_key : api_key
       });
     } else {
       res.status(403).send({
