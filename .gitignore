@@ -4,6 +4,7 @@ package-lock.json
 
 .env
 
+dist/
 apidoc/
 
 Log/*
