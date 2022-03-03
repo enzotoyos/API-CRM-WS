@@ -89,10 +89,7 @@ OrganizationRoute.get("/:id", async (req: Request, res: Response) => {
  * @apiBody {String} name           Mandatory  name of the Organization.
  * @apiBody {Array} customers        Mandatory Array of Customers.
  */
-OrganizationRoute.post(
-  "/",
-  Interceptor,
-  async (req: Request, res: Response) => {
+OrganizationRoute.post("/",Interceptor,async (req: Request, res: Response) => {
     const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
     const message = testValueInBody(req.body.NbEmployees, req.body.logo);
 
@@ -157,10 +154,9 @@ OrganizationRoute.put("/:id", async (req: Request, res: Response) => {
 
   await orgaRef.update({
     address: req.body.address,
-    customers: req.body.customers,
     name: req.body.name,
-    nbworkers: req.body.nbworkers,
-    logo: req.body.logo,
+    NbEmployees: req.body.NbEmployees,
+    //logo à mettre
     updatedAt: Date.now(),
     createdAt: Date.now(),
   });
