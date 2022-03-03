@@ -20,6 +20,7 @@ app.use(bodyParser.urlencoded());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(function (req: any, res, next) {
+    Logger.info(`${req.method}:${req.baseUrl}${req.path}`);
     res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
     res.header(
         "Access-Control-Allow-Headers",

@@ -25,11 +25,11 @@ const LoggerManager = (moduleName: string) => createLogger({
     transports: [
         new transports.File({
             filename: './Log/default.log',
-            level: 'log',
+            level: 'info',
             format: logFormat
         }),
         new transports.File({
-            filename: './Log/error.json',
+            filename: './Log/error.log',
             level: 'error',
             format: formatError
         })
