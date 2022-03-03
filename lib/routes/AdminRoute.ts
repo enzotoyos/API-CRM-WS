@@ -5,13 +5,13 @@ import { getAuth } from "firebase-admin/auth";
 import { DocumentData, getFirestore } from "firebase-admin/firestore";
 import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
-import AuthController from "../controller/AuthController";
+import AdminController from "../controller/AdminController";
 import MailController from "../controller/MailController";
 import LoggerManager = require("../../config/Logger");
 
 const db = getFirestore();
 const AdminRoute = Router();
-const AuthCtrl = new AuthController();
+const AuthCtrl = new AdminController();
 const mailCtrl = new MailController();
 const tokenCtrl = new TokenController();
 const adminRef = db.collection("admins");
@@ -96,11 +96,14 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
       });
     }
 
-    const dateExpire = new Date(record[0].createdAt);
-    dateExpire.setMinutes(dateExpire.getMinutes() + 1);
+    let isSpam = false;
+    if (record.length > 0) {
+      const dateExpire = new Date(record[0].createdAt);
+      dateExpire.setMinutes(dateExpire.getMinutes() + 1);
+      isSpam = (dateExpire.getTime() > new Date().getTime());
+    }
 
     // isSpam = false we can create Admin
-    const isSpam = dateExpire.getTime() > new Date().getTime();
     if (!isSpam) {
       const userRecord = await getAuth().createUser({
         email: req.body.email,
