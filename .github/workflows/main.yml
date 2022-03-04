@@ -36,9 +36,7 @@ jobs:
       run: | 
         cd ./config/
         ls
-        echo { >> crm-ws-firebase-adminsdk.json
         echo ${{ secrets.KEY_FIREBASE }} >> crm-ws-firebase-adminsdk.json
-        echo } >> crm-ws-firebase-adminsdk.json
         cat crm-ws-firebase-adminsdk.json
         cd ..
         
