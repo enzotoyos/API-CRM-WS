@@ -1,8 +1,6 @@
-import express, { query } from "express";
 import { Router, Request, Response } from "express";
-import admin from "firebase-admin";
 import { getAuth } from "firebase-admin/auth";
-import { DocumentData, getFirestore } from "firebase-admin/firestore";
+import { getFirestore } from "firebase-admin/firestore";
 import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
 import AdminController from "../controller/AdminController";
@@ -27,7 +25,6 @@ const Logger = LoggerManager(__filename);
  * @apiBody {String} api_key       Mandatory Admin Api Key.
  */
 AdminRoute.post("/login", async (req: Request, res: Response) => {
-  console.log(req.body);
   Logger.error(req.body);
   if (req.body.email && req.body.api_key) {
     let record = await AuthCtrl.login(req.body.email, req.body.api_key);
@@ -57,13 +54,11 @@ AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
   const userDoc = db.collection("admins").doc(id);
   const doc = await userDoc.get();
   if (!doc.exists) {
-    console.log("No such document!");
     res.status(403).send({
       success: false,
       message: "Aucun utilisateur ne correspond à cet ID ",
     });
   } else {
-    console.log("Document data:", doc.data());
     res.status(200).send({ sucess: true, value: doc.data() });
   }
 });
@@ -81,10 +76,8 @@ AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
  * @apiBody {String} phone              Mandatory Admin phone.
  */
 AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
-
   const api_key = tokenCtrl.makeRandomHash(20);
-  console.log("api key", api_key);
-  
+
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   try {
     const record = [];
@@ -103,7 +96,7 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
     if (record.length > 0) {
       const dateExpire = new Date(record[0].createdAt);
       dateExpire.setMinutes(dateExpire.getMinutes() + 1);
-      isSpam = (dateExpire.getTime() > new Date().getTime());
+      isSpam = dateExpire.getTime() > new Date().getTime();
     }
 
     // isSpam = false we can create Admin
@@ -140,7 +133,7 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
         message:
           "L'administrateur a bien été ajouté. Un email de validation a été envoyé.",
         record: userRecord.uid,
-        api_key : api_key
+        api_key: api_key,
       });
     } else {
       res.status(403).send({
@@ -163,8 +156,6 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
  *
  */
 AdminRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
-  console.log(req.query.id);
-
   const admRef = adminRef.doc(String(req.params.id));
 
   await admRef.update({
@@ -193,7 +184,6 @@ AdminRoute.delete("/", Interceptor, async (req: Request, res: Response) => {
   if (req.params.id === null)
     try {
       getAuth().deleteUser(id);
-      console.log("Successfully deleted user");
       await db.collection("admins").doc(id).delete();
       res
         .status(200)
