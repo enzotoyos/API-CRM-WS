@@ -9,8 +9,8 @@ import * as dotenv from "dotenv";
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
 const vault = new Vault(process.env.KEY_ENCRYPT_FIREBASE);
+//déchiffrement du JSON avec la clé dans le .env
 vault.decrypt("./config/crm-ws-firebase-adminsdk.enc.json");
-console.log("vault", vault);
 
 admin.initializeApp({
   credential: admin.credential.cert(vault.secrets as any),
