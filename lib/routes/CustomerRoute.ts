@@ -6,6 +6,8 @@ import MailController from "../controller/MailController";
 import admin from "firebase-admin";
 import TokenController from "../controller/TokenController";
 import { v4 as uuidv4 } from "uuid";
+import AdminController from "../controller/AdminController";
+import LoggerManager from "../../config/Logger";
 
 const CustomerRoute = Router();
 const db = getFirestore();
@@ -14,6 +16,8 @@ const customerRef = db.collection("customers");
 const orgaRef = db.collection("organizations");
 const mailCtrl = new MailController();
 const tokenCtrl = new TokenController();
+const adminCtrl = new AdminController();
+const Logger = LoggerManager(__filename);
 
 const storageRef = admin.storage().bucket(`crm-ws.appspot.com`);
 
@@ -69,12 +73,14 @@ CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  *
  */
 CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   const result: IResult = {
     success: true,
     message: "La récupération du client a réussi.",
   };
 
   try {
+    if (await adminCtrl.checkAutorisationCustForAdmin(tokenDecod.uid, req.params.id)){
     const custoRef = customerRef.doc(req.params.id);
     const doc = await custoRef.get();
     if (!doc.exists) {
@@ -84,6 +90,13 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
       result.result.imageUrl = await downloadCustomerImage(req.params.id);
     }
     res.status(200).send(result);
+  }else {
+    res.status(401).send({
+      success: false,
+      message:
+        "Vous n'avez pas le droit d'accéder à cette ressource."
+    });
+  }
   } catch (error: unknown) {
     res.status(400).send({
       success: false,
