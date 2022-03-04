@@ -200,11 +200,12 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
  * @apiBody {String} image          Image en Base64
  */
 CustomerRoute.post(
-  "/upload",
+  "/:id/image",
   Interceptor,
   async (req: Request, res: Response) => {
+    console.log(req.params.id);
     try {
-      uploadImage(req.body.image, req.body.idCustomer).then(function (result) {
+      uploadImage(req.body.image, req.params.id).then(function (result) {
         res.status(200).send({
           sucess: true,
           message: "Image uploaded",
