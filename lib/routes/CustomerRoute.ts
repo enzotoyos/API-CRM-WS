@@ -80,23 +80,27 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
   };
 
   try {
-    if (await adminCtrl.checkAutorisationCustForAdmin(tokenDecod.uid, req.params.id)){
-    const custoRef = customerRef.doc(req.params.id);
-    const doc = await custoRef.get();
-    if (!doc.exists) {
-      result.message = "Aucun client correspondant";
+    if (
+      await adminCtrl.checkAutorisationCustForAdmin(
+        tokenDecod.uid,
+        req.params.id
+      )
+    ) {
+      const custoRef = customerRef.doc(req.params.id);
+      const doc = await custoRef.get();
+      if (!doc.exists) {
+        result.message = "Aucun client correspondant";
+      } else {
+        result.result = doc.data();
+        result.result.imageLink = await getListImage(req.params.id);
+        res.status(200).send(result);
+      }
     } else {
-      result.result = doc.data();
-      result.result.imageUrl = await downloadCustomerImage(req.params.id);
+      res.status(401).send({
+        success: false,
+        message: "Vous n'avez pas le droit d'accéder à cette ressource.",
+      });
     }
-    res.status(200).send(result);
-  }else {
-    res.status(401).send({
-      success: false,
-      message:
-        "Vous n'avez pas le droit d'accéder à cette ressource."
-    });
-  }
   } catch (error: unknown) {
     res.status(400).send({
       success: false,
@@ -187,21 +191,21 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
 });
 
 /**
- * @api {post} customer/ post Image 
+ * @api {post} customer/ post Image
  * @apiGroup Customer
  * @apiName postCustomer
- * @apiDescription Ajouter une image pour un client 
+ * @apiDescription Ajouter une image pour un client
  * @apiPermission Token
  * @apiBody {String} idCustomer            ID du customer
  * @apiBody {String} image          Image en Base64
-
  */
 CustomerRoute.post(
-  "/upload",
+  "/:id/image",
   Interceptor,
   async (req: Request, res: Response) => {
+    console.log(req.params.id);
     try {
-      uploadImage(req.body.image, req.body.idCustomer).then(function (result) {
+      uploadImage(req.body.image, req.params.id).then(function (result) {
         res.status(200).send({
           sucess: true,
           message: "Image uploaded",
@@ -255,18 +259,20 @@ const uploadImage = (data: string, idClient: string) => {
   });
 };
 
-const downloadCustomerImage = async (idCustomer: string) => {
-  const destFilename = "../../" + idCustomer + ".png";
-  const options = {
-    destination: destFilename,
-  };
-
-  // Downloads the file
-  await admin
-    .storage()
-    .bucket(`crm-ws.appspot.com`)
-    .file("customersPhoto/" + idCustomer + ".png")
-    .download(options);
+const getListImage = async (idCustomer: string) => {
+  let imageLink = [];
+  const customerDOC = await db.collection("customers").doc(idCustomer).get();
+  if (!customerDOC.exists) {
+    console.log("erreur: document avec cet ID introuvable!");
+    return false;
+  } else {
+    imageLink = customerDOC.data().imageLink;
+    if (imageLink.length === 0) {
+      return [];
+    } else {
+      return imageLink;
+    }
+  }
 };
 
 const testValueInBody = (
