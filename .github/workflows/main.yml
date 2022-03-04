@@ -1,45 +1,36 @@
 name: Deploy API on Server
 
-on: 
+on:
   push:
-    branches: 
-      - 'main'
-      
+    branches:
+      - "main"
+
 jobs:
   web-deploy:
-
     name: Deploy API App
     runs-on: ubuntu-latest
     environment: development
-    
+
     steps:
-    - name: Get latest code
-      uses: actions/checkout@v1
+      - name: Get latest code
+        uses: actions/checkout@v1
 
-    - name: Use Node.js 14 LTS
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-      
-    - name: Install NPM Modules
-      run: npm install
-      
-    - name: Create .env File
-      run: | 
-        echo API_KEY="${{ secrets.API_KEY }}" >> .env
-        echo PORT=3000 >> .env
-        echo EMAIL="${{ secrets.EMAIL }}" >> .env
-        echo EMAIL_PASSWORD="${{ secrets.EMAIL_PASSWORD }}" >> .env
-        cat .env
-        
-    - name: Create .JSON_FIREBASE File
-      run: | 
-        cd ./config/
-        ls
-        echo "${{ secrets.KEY_FIREBASE }}" >> crm-ws-firebase-adminsdk.json
-        cat crm-ws-firebase-adminsdk.json
-        cd ..
-        
-    - name: Build Project
-      run: npm run build
+      - name: Use Node.js 14 LTS
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
 
+      - name: Install NPM Modules
+        run: npm install
+
+      - name: Create .env File
+        run: |
+          echo API_KEY="${{ secrets.API_KEY }}" >> .env
+          echo PORT=3000 >> .env
+          echo EMAIL="${{ secrets.EMAIL }}" >> .env
+          echo EMAIL_PASSWORD="${{ secrets.EMAIL_PASSWORD }}" >> .env
+          echo KEY_ENCRYPT_FIREBASE="${{ secrets.KEY_ENCRYPT_FIREBASE }}" >> .env
+          cat .env
+
+      - name: Build Project
+        run: npm run build
