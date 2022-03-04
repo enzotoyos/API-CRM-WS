@@ -24,6 +24,14 @@ jobs:
     - name: Install NPM Modules
       run: npm install
       
+    - name: Create .env File
+      run: | 
+        echo API_KEY="${{ secrets.API_KEY }}" >> .env
+        echo PORT=3000 >> .env
+        echo EMAIL="${{ secrets.EMAIL }}" >> .env
+        echo EMAIL_PASSWORD="${{ secrets.EMAIL_PASSWORD }}" >> .env
+        cat .env
+        
     - name: Build Project
       run: npm run build
 
