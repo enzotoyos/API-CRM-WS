@@ -223,18 +223,23 @@ CustomerRoute.post(
   }
 );
 
-
 CustomerRoute.delete(
   "/:id/image",
   Interceptor,
   async (req: Request, res: Response) => {
-   
     try {
-       const imageResult = deleteImage(req.body.imageLink, req.params.id);
-      if(await imageResult === false) {
-        res.status(403).send({success : false, message : "erreur lors de la suppression"})
+      const imageResult = deleteImage(
+        String(req.query.imageLink),
+        req.params.id
+      );
+      if ((await imageResult) === false) {
+        res
+          .status(403)
+          .send({ success: false, message: "erreur lors de la suppression" });
       } else {
-        res.status(200).send({success : true, message : "succès lors de la suppression"})
+        res
+          .status(200)
+          .send({ success: true, message: "succès lors de la suppression" });
       }
     } catch (error: unknown) {
       res.status(400).send({
@@ -248,18 +253,26 @@ CustomerRoute.delete(
 
 const deleteImage = async (imageLink: string, idCustomer: string) => {
   const userDoc = await db.collection("customers").doc(idCustomer).get();
-    if (!userDoc.exists) {
-      return false;
-    }else{
-      const custoContent = userDoc.data();
-      const index = custoContent.imageLink.indexOf(imageLink);
-      if(index > -1) {
-        custoContent.imageLink.splice(index, 1);
-      }
-      db.collection("customers").doc(idCustomer).update(custoContent);
-      return true;
+  if (!userDoc.exists) {
+    return false;
+  } else {
+    let custoContent = userDoc.data();
+    console.log("CustoContent : ", custoContent);
+    console.log(custoContent.imageLink[0]);
+    console.log(imageLink);
+
+    const index = custoContent.imageLink.indexOf(imageLink);
+    console.log("index", index);
+
+    if (index > -1) {
+      custoContent.imageLink.splice(index, 1);
+      console.log("test", custoContent);
     }
-}
+    console.log("CustoContentAfter: ", custoContent);
+    db.collection("customers").doc(idCustomer).update(custoContent);
+    return true;
+  }
+};
 
 const uploadImage = (data: string, idClient: string) => {
   return new Promise((resolve) => {
