@@ -37,3 +37,6 @@ SECURE_KEY=
 EMAIL=
 EMAIL_PASSWORD=
 ```
+
+Module installé en globale 
+- npm i -g kourou
