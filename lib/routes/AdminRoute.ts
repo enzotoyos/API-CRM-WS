@@ -28,6 +28,7 @@ AdminRoute.post("/login", async (req: Request, res: Response) => {
   Logger.error(req.body);
   if (req.body.email && req.body.api_key) {
     let record = await AuthCtrl.login(req.body.email, req.body.api_key);
+
     if (record.success) {
       record = await tokenCtrl.createToken(record.record.localId);
       res.status(200).send(record);
@@ -50,7 +51,7 @@ AdminRoute.post("/login", async (req: Request, res: Response) => {
  *
  */
 AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
-  var id: string = String(req.params.id);
+  const id: string = req.params.id;
   const userDoc = db.collection("admins").doc(id);
   const doc = await userDoc.get();
   if (!doc.exists) {
@@ -178,7 +179,7 @@ AdminRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
  *
  */
 AdminRoute.delete("/", Interceptor, async (req: Request, res: Response) => {
-  const id: string = String(req.params.id);
+  const id: string = req.params.id;
 
   if (req.params.id === null)
     try {

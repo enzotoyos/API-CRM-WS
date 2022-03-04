@@ -63,7 +63,6 @@ AppointementRoute.get(
       const appoinRef = appointementRef.doc(req.params.id);
       const doc = await appoinRef.get();
       if (!doc.exists) {
-        console.log("No such document!");
         result.message = "Aucun rendez-vous correspondant";
       } else {
         result.result = doc.data();
@@ -96,12 +95,14 @@ AppointementRoute.post(
   Interceptor,
   async (req: Request, res: Response) => {
     const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-    // vérification du bon format de la date
-    // regexDate(req.body.date) == false
-    if (false) {
-      res
-        .status(403)
-        .send({ sucess: false, message: "format de la date incorrect" });
+
+    // vérification du bon format de la date format DD/MM/YYYY HH:MM
+    if (regexDate(req.body.date) == false) {
+      res.status(403).send({
+        sucess: false,
+        message:
+          "format de la date incorrect. Format accepté  DD/MM/YYYY HH:MM  ",
+      });
     } else {
       try {
         const appaointDoc = await appointementRef.add({
@@ -117,13 +118,11 @@ AppointementRoute.post(
           appointement: FieldValue.arrayUnion(appaointDoc.id),
         });
 
-        res
-          .status(200)
-          .send({
-            success: true,
-            message: "Rendez-vous Ajouté",
-            record: appaointDoc.id,
-          });
+        res.status(200).send({
+          success: true,
+          message: "Rendez-vous Ajouté",
+          record: appaointDoc.id,
+        });
       } catch (error: unknown) {
         res.status(400).send({
           success: false,
@@ -185,7 +184,7 @@ AppointementRoute.delete(
 
 const regexDate = (date: string) => {
   const regexDate = new RegExp(
-    /^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/
+    /^([1-9]|([012][0-9])|(3[01]))-([0]{0,1}[1-9]|1[012])-\d\d\d\d [012]{0,1}[0-9]:[0-6][0-9]$/
   );
 
   const dateRegex = date.match(regexDate);

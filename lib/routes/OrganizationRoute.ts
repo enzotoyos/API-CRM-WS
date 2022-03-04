@@ -224,12 +224,16 @@ OrganizationRoute.delete(
 );
 
 const testValueInBody = (address: string, name: string) => {
-  if (address == null) {
-    return "le champ address est manquant";
-  } else if (name == null) {
-    return "le champ name est manquant";
-  } else {
-    return true;
+  switch (null) {
+    case address:
+      return "le champ address est manquant";
+      break;
+    case name:
+      return "le champ name est manquant";
+      break;
+    default:
+      return true;
+      break;
   }
 };
 
