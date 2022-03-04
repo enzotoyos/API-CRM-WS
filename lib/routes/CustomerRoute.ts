@@ -69,7 +69,7 @@ CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-CustomerRoute.get("/:id", async (req: Request, res: Response) => {
+CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
   const result: IResult = {
     success: true,
     message: "La récupération du client a réussi.",
@@ -189,7 +189,7 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
  * @apiBody {String} image          Image en Base64
 
  */
-CustomerRoute.post("/upload", async (req: Request, res: Response) => {
+CustomerRoute.post("/upload", Interceptor, async (req: Request, res: Response) => {
   try {
     uploadImage(req.body.image, req.body.idCustomer).then(function (result) {
       res.status(200).send({

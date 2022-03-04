@@ -162,7 +162,7 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-AdminRoute.put("/:id", async (req: Request, res: Response) => {
+AdminRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
   console.log(req.query.id);
 
   const admRef = adminRef.doc(String(req.params.id));

@@ -51,7 +51,7 @@ OrganizationRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-OrganizationRoute.get("/:id", async (req: Request, res: Response) => {
+OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
   const result: IResult = {
     success: true,
     message: "La récupération de l'organisation a réussi.",
@@ -89,50 +89,50 @@ OrganizationRoute.get("/:id", async (req: Request, res: Response) => {
  * @apiBody {String} name           Mandatory  name of the Organization.
  * @apiBody {Array} customers        Mandatory Array of Customers.
  */
-OrganizationRoute.post("/",Interceptor,async (req: Request, res: Response) => {
-    const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-    const message = testValueInBody(req.body.address, req.body.name);
-    console.log(message);
+OrganizationRoute.post("/", Interceptor, async (req: Request, res: Response) => {
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+  const message = testValueInBody(req.body.address, req.body.name);
+  console.log(message);
 
-    if (message === true) {
-      try {
-        // On crée une organisation
-        const newOrga = await organizationRef.add({
-          address: req.body.address,
-          name: req.body.name,
-          NbEmployees: req.body.NbEmployees ? req.body.NbEmployees : "0",
-          customers: [],
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          createdBy: tokenDecod.uid,
-          logo: [],
-        });
-        // Puis on l'ajoute dans le tableau de l'admin
-        const docAdmin = adminRef.doc(tokenDecod.uid);
-        await docAdmin.update({
-          organization: FieldValue.arrayUnion(newOrga.id),
-        });
-        res.status(200).send({
-          success: true,
-          message: "Organisation Ajoutée",
-          record: newOrga.id,
-        });
-      } catch (error: unknown) {
-        console.log(error);
-        res.status(400).send({
-          success: false,
-          message: "Une erreur est survenue durant l'ajout d'une organisation.",
-          error: error,
-        });
-      }
-    } else {
-      res.status(403).send({
+  if (message === true) {
+    try {
+      // On crée une organisation
+      const newOrga = await organizationRef.add({
+        address: req.body.address,
+        name: req.body.name,
+        NbEmployees: req.body.NbEmployees ? req.body.NbEmployees : "0",
+        customers: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        createdBy: tokenDecod.uid,
+        logo: [],
+      });
+      // Puis on l'ajoute dans le tableau de l'admin
+      const docAdmin = adminRef.doc(tokenDecod.uid);
+      await docAdmin.update({
+        organization: FieldValue.arrayUnion(newOrga.id),
+      });
+      res.status(200).send({
+        success: true,
+        message: "Organisation Ajoutée",
+        record: newOrga.id,
+      });
+    } catch (error: unknown) {
+      console.log(error);
+      res.status(400).send({
         success: false,
         message: "Une erreur est survenue durant l'ajout d'une organisation.",
-        error: message,
+        error: error,
       });
     }
+  } else {
+    res.status(403).send({
+      success: false,
+      message: "Une erreur est survenue durant l'ajout d'une organisation.",
+      error: message,
+    });
   }
+}
 );
 
 /**
@@ -148,7 +148,7 @@ OrganizationRoute.post("/",Interceptor,async (req: Request, res: Response) => {
  * @apiBody {Number} nbworkers         Optional number of workers inside the Organization.
  * @apiBody {String} logo              Optional logo of the Organization.
  */
-OrganizationRoute.put("/:id", async (req: Request, res: Response) => {
+OrganizationRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
   console.log(req.query.id);
 
   const orgaRef = organizationRef.doc(String(req.params.id));
@@ -173,7 +173,7 @@ OrganizationRoute.put("/:id", async (req: Request, res: Response) => {
  * @apiDescription supprime une organisation
  * @apiPermission Token
  */
-OrganizationRoute.delete("/:id", async (req: Request, res: Response) => {
+OrganizationRoute.delete("/:id", Interceptor, async (req: Request, res: Response) => {
   if (req.params.id == null) {
     const result = {
       success: false,
