@@ -177,7 +177,7 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
           });
         }
       }
-    } catch (error : any) {
+    } catch (error: any) {
       Logger.log({ level: "error", message: error });
       res.status(400).send({
         success: false,
@@ -271,7 +271,22 @@ const deleteImage = async (imageLink: string, idCustomer: string) => {
     if (index > -1) {
       custoContent.imageLink.splice(index, 1);
     }
+    let value = imageLink.split(
+      "https://storage.googleapis.com/crm-ws.appspot.com/customersPhoto/"
+    );
+    let value2 = value[1].split("?");
+
     db.collection("customers").doc(idCustomer).update(custoContent);
+    storageRef
+      .file("customersPhoto/" + value2[0])
+      .delete()
+      .then(() => {
+        console.log("Successfully deleted photo ");
+      })
+      .catch((err) => {
+        console.log("Failed to remove photo", err);
+        return false;
+      });
     return true;
   }
 };
