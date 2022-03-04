@@ -6,10 +6,12 @@ import {
     getFirestore,
 } from "firebase-admin/firestore";
 import IResult from "../interface/IResult";
+import { URL } from 'url';
 
 const db = getFirestore();
 const adminRef = db.collection("admins");
 const orgaRef = db.collection("organizations");
+const custoRef = db.collection("customers");
 
 class AdminController {
 
@@ -35,8 +37,6 @@ class AdminController {
 
     /**
      * checkAutorisationCustForAdmin
-     * 
-     * UIDadmin -> Récupération des organisations 
      * 
      * @param idAdmin 
      * @param idOrganization 
@@ -67,14 +67,38 @@ class AdminController {
     /**
      * checkAutorisationRdvForAdmin
      * 
-     * UIDadmin -> Récupération des organisations 
-     * 
      * @param idAdmin 
      * @param idRdv
      * @returns 
      */
     async checkAutorisationRdvForAdmin(idAdmin: string, idRdv: string): Promise<boolean> {
         let result = false;
+
+        const docUser = adminRef.doc(idAdmin);
+        const doc = await docUser.get();
+        const listIdOrga: String[] = doc.data().organization;
+
+        for (let index in listIdOrga) {
+            const docOrga = orgaRef.doc(String(listIdOrga[index]));
+            const doc = await docOrga.get();
+            const listIdCusto: String[] = doc.data().customer;
+            for (let iterator in listIdCusto) {
+                const docCusto = custoRef.doc(String(listIdCusto[iterator]));
+                const docData = await docCusto.get();
+
+                if (docData.data().appointement && docData.data().appointement.length > 0) {
+                    result = docData.data().appointement.includes(idRdv);
+                }
+
+                if (result) {
+                    break;
+                }
+            }
+
+            if (result) {
+                break;
+            }
+        }
 
         return result;
     }
@@ -134,7 +158,7 @@ class AdminController {
      * @param body 
      * @returns Promise<any>
      */
-    async wrapedSendRequest(options, body): Promise<any> {
+    async wrapedSendRequest(options: string | https.RequestOptions | URL, body: string): Promise<any> {
         return new Promise((resolve, reject) => {
             const req = https.request(options, (res: IncomingMessage) => {
                 console.log(`statusCode: ${res.statusCode}`);

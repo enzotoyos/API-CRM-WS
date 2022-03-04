@@ -3,7 +3,9 @@ import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import IResult from "../interface/IResult";
 import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
+import LoggerManager from "../../config/Logger";
 
+const Logger = LoggerManager(__filename);
 const AppointementRoute = Router();
 const db = getFirestore();
 const tokenCtrl = new TokenController();
@@ -31,8 +33,8 @@ AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
       result.record.push(doc.data());
     });
     res.status(200).send(result);
-  } catch (error: unknown) {
-    console.log(error);
+  } catch (error) {
+    Logger.log({ level: 'error', message: error });
     res.status(400).send({
       success: false,
       message:
@@ -67,8 +69,8 @@ AppointementRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
       result.result = doc.data();
     }
     res.status(200).send(result);
-  } catch (error: unknown) {
-    console.log(error);
+  } catch (error) {
+    Logger.log({ level: 'error', message: error });
     res.status(400).send({
       success: false,
       message:
@@ -99,7 +101,7 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
     try {
       console.log(req.body);
       console.log(tokenDecod.uid);
-      
+
       const appaointDoc = await appointementRef.add({
         resume: req.body.resume,
         date: req.body.date,
@@ -114,8 +116,8 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
       });
 
       res.status(200).send({ success: true, message: "Rendez-vous Ajouté", record: appaointDoc.id });
-    } catch (error: unknown) {
-      console.log(error);
+    } catch (error) {
+      Logger.log({ level: 'error', message: error });
       res.status(400).send({
         success: false,
         message: "Une erreur est survenue durant l'ajout d'un rendez-vous.",

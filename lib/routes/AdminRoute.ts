@@ -149,7 +149,7 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
-    console.log("Error creating new user:", error);
+    Logger.log({level: 'error', message: error});
     res.status(403).send({ success: false, message: error.message });
   }
 });
@@ -198,8 +198,8 @@ AdminRoute.delete("/", Interceptor, async (req: Request, res: Response) => {
       res
         .status(200)
         .send({ success: true, message: "Utilisateur supprimé avec succès" });
-    } catch (error: unknown) {
-      console.log("Error deleting user:", error);
+    } catch (error) {
+      Logger.log({level: 'error', message: error});
       res
         .status(403)
         .send({ success: false, message: "erreur lors de la suppression" });

@@ -2,10 +2,11 @@ import { transports, createLogger, format } from 'winston';
 import * as path from 'path';
 import fs = require('fs');
 
+
 /**
  * Output Info Logger
  */
-const logFormat = format.combine(
+const defaultFormat = format.combine(
     format.timestamp({ format: 'DD-MM-YYYY HH:mm:ss' }),
     format.align(),
     format.printf(info => `${info.timestamp} ${info.level} ${info.component}: ${info.message}`)
@@ -16,8 +17,8 @@ const logFormat = format.combine(
 const formatError = format.combine(
     format.errors({ stack: true }),
     format.timestamp({ format: 'DD-MM-YYYY HH:mm:ss' }),
+    format.printf(info => `${info.timestamp} ${info.level} ${info.component}: ${info.message} ${info.stack}`),
     format.align(),
-    format.prettyPrint(),
 );
 
 const LoggerManager = (moduleName: string) => createLogger({
@@ -26,7 +27,7 @@ const LoggerManager = (moduleName: string) => createLogger({
         new transports.File({
             filename: './Log/default.log',
             level: 'info',
-            format: logFormat
+            format: defaultFormat
         }),
         new transports.File({
             filename: './Log/error.log',
