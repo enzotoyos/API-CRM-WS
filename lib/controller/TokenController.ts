@@ -17,7 +17,6 @@ class TokenController {
      */
     async createToken(uid: string) {
         const result: any = {};
-
         try {
             // Récupération des informations nécessaire
             const adminDoc = adminRef.doc(uid);
@@ -25,9 +24,7 @@ class TokenController {
             // Création de la date d'expiration
             const dateExpire = new Date();
             //On Ajoute 10 minutes
-            // dateExpire.setHours(dateExpire.getHours() + 1);
             dateExpire.setMinutes(dateExpire.getMinutes() + 10);
-            console.log(doc.data().name);
             
             //Création du Token
             const jwbToken: string = jwt.sign(
@@ -49,7 +46,7 @@ class TokenController {
             // Update Subscription pour mettre le token actuel dedans
             result.message = "La connexion à réussi";
             result.expiresIn = dateExpire.toLocaleString("en-GB", { timeZone: "Europe/Paris" });
-            result.result = jwbToken;
+            result.token = jwbToken;
             result.success = true;
             return result;
         } catch (error: any) {

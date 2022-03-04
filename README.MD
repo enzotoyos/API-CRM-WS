@@ -9,9 +9,16 @@
   - Express
 - BDD Firestore
 
-## LIEN SITE
+### Lien API
 
-https://test.mira-ceti.ovh
+> https://test.mira-ceti.ovh
+
+### Admin par défaut
+
+> EMAIL : admin.default@crm.ynov
+
+> API_KEY :
+
 
 ### Installation
 
@@ -19,7 +26,7 @@ https://test.mira-ceti.ovh
 - npm install -g ts-node
 -
 
-#### Fichier de conf
+### Fichier de configuration
 
 Propriétés a renseigner dans le fichier de configuration
 
@@ -37,6 +44,3 @@ SECURE_KEY=
 EMAIL=
 EMAIL_PASSWORD=
 ```
-
-Module installé en globale 
-- npm i -g kourou
