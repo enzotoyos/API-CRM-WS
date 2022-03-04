@@ -223,6 +223,44 @@ CustomerRoute.post(
   }
 );
 
+
+CustomerRoute.delete(
+  "/:id/image",
+  Interceptor,
+  async (req: Request, res: Response) => {
+   
+    try {
+       const imageResult = deleteImage(req.body.imageLink, req.params.id);
+      if(await imageResult === false) {
+        res.status(403).send({success : false, message : "erreur lors de la suppression"})
+      } else {
+        res.status(200).send({success : true, message : "succès lors de la suppression"})
+      }
+    } catch (error: unknown) {
+      res.status(400).send({
+        success: false,
+        message: "Une erreur est survenue durant la suppression.",
+        error: error,
+      });
+    }
+  }
+);
+
+const deleteImage = async (imageLink: string, idCustomer: string) => {
+  const userDoc = await db.collection("customers").doc(idCustomer).get();
+    if (!userDoc.exists) {
+      return false;
+    }else{
+      const custoContent = userDoc.data();
+      const index = custoContent.imageLink.indexOf(imageLink);
+      if(index > -1) {
+        custoContent.imageLink.splice(index, 1);
+      }
+      db.collection("customers").doc(idCustomer).update(custoContent);
+      return true;
+    }
+}
+
 const uploadImage = (data: string, idClient: string) => {
   return new Promise((resolve) => {
     const buf = Buffer.from(data, "base64");
