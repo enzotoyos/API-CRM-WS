@@ -29,7 +29,7 @@ class MailController {
         let result = false;
 
         try {
-            let pathToTemplate = path.resolve('./') + path.join('/', 'templates', 'mail', 'verifEmail.html');
+            const pathToTemplate = path.resolve('./') + path.join('/', 'templates', 'mail', 'verifEmail.html');
 
             const tmpMailInit: string = fs.readFileSync(pathToTemplate, { encoding: 'utf8', flag: 'r' });
             let template: string = tmpMailInit.replace('%DISPLAY_NAME%', fullname);
@@ -37,7 +37,7 @@ class MailController {
             template = template.replace('%LINK%', link);
             template = template.replace('%LINK%', link);
 
-            let mailOptionsOVH = {
+            const mailOptionsOVH = {
                 from: process.env.EMAIL,
                 to: email,
                 subject: 'Validation de l\'adresse mail pour l\'API CRM-WS.',

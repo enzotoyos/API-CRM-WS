@@ -19,17 +19,35 @@ const tokenCtrl = new TokenController();
  *
  */
 OrganizationRoute.get("/", Interceptor, async (req: Request, res: Response) => {
+
+
+ // Get the token of the current admin
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+ // Go through the admin collection with the admin token
+  const userDoc = db.collection("admins").doc(tokenDecod.uid);
+ // Get admin infos
+  const doc = await userDoc.get();
+  
   const result: IResult = {
     success: true,
-    message: "La récupération des organisations a réussi.",
+    message: "La récupération des organisations par id admin a réussi.",
     record: [],
   };
-
+ // listOrga contain all organization from the admin token
+  const listOrga = doc.data().organization;
+  const allOrga = [];
   try {
-    const snapshot = await organizationRef.get();
-    snapshot.forEach((doc) => {
-      result.record.push(doc.data());
-    });
+ // For each loop through the list of organization and return organizations who have the admin token as id
+  for (let index in listOrga) {
+    const docOrga = organizationRef.doc(String(listOrga[index]));
+    const docu = await docOrga.get();
+    result.record.push(docu.data());
+}
+ 
+    // const snapshot = await organizationRef.get();
+    // snapshot.forEach((doc) => {
+    //   result.record.push(doc.data());
+    // });
     res.status(200).send(result);
   } catch (error: unknown) {
     res.status(400).send({

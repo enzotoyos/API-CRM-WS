@@ -16,7 +16,7 @@ class TokenController {
      * @param {string} uid
      */
     async createToken(uid: string) {
-        let result: any = {};
+        const result: any = {};
 
         try {
             // Récupération des informations nécessaire
@@ -81,7 +81,7 @@ class TokenController {
      * @param {Array<String>} listOfAction
      * @returns boolean
      */
-    havePermission(token: string, listOfAction: Array<String>) {
+    havePermission(token: string, listOfAction: Array<string>) {
         try {
             if (undefined !== token) {
                 const tokenDecode: any = jwt.verify(token, secureKey);
