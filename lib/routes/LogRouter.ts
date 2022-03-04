@@ -4,27 +4,35 @@ import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
 import AdminController from "../controller/AdminController";
 import LoggerManager from "../../config/Logger";
+import * as path from 'path';
+import fs = require('fs');
 
 const LogRouter = Router();
 const tokenCtrl = new TokenController();
 const adminCtrl = new AdminController();
-//const Logger = LoggerManager(__filename);
+const Logger = LoggerManager(__filename);
 
+/**
+ * @api {get} log/ Get Log by type
+ * @apiQuery {String} type    Type of Log (default / error)
+ * @apiGroup Log
+ * @apiName getLog
+ * @apiDescription Récupère le contenu d'un fichier de log
+ * @apiPermission Token
+ *
+ */
 LogRouter.get("/", Interceptor, async (req: Request, res: Response) => {
-  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+  const pathToDefault = path.resolve('./') + path.join('/', 'Log', 'default.log');
+  const pathToError = path.resolve('./') + path.join('/', 'Log', 'error.log');
+  try {
+    const defaultLog: string = fs.readFileSync(pathToDefault, { encoding: 'utf8', flag: 'r' });
+    const defaultError: string = fs.readFileSync(pathToError, { encoding: 'utf8', flag: 'r' });
 
-  const result: IResult = {
-    success: true,
-    message: "Test Log",
-    record: null,
-  };
-
-  const ea = await adminCtrl.checkAutorisationCustForAdmin(
-    tokenDecod.uid,
-    String(req.query.id)
-  );
-  result.record = ea;
-  res.status(200).send(result);
+    res.status(200).send((req.query.type === 'error') ? defaultError : defaultLog);
+  } catch (error) {
+    Logger.log({ level: "error", message: error });
+    res.status(500).send({success: false, message: 'Une erreur est survenue durant la récupération du fichier : ' + req.query.type});
+  }
 });
 
 export = LogRouter;
