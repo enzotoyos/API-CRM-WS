@@ -1,6 +1,6 @@
 ## API CRM-WS
 
-![Build API](https://github.com/enzotoyos/API-CRM-WS/workflows/Build%20build/badge.svg?branch=main)
+![Build API](https://github.com/enzotoyos/API-CRM-WS/workflows/Build%20API/badge.svg?branch=main)
 
 ### Technologie
 
