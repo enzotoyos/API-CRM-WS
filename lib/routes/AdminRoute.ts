@@ -120,7 +120,7 @@ AdminRoute.get("/", Interceptor, async (req: Request, res: Response) => {
   try {
     const snapshot = await adminRef.get();
     snapshot.forEach((temp) => {
-      let aAdmin = temp.data();
+      const aAdmin = temp.data();
       aAdmin.id = temp.id;
       result.record.push(aAdmin);
     });

@@ -147,7 +147,8 @@ OrganizationRoute.post(
           message: "Organisation Ajoutée",
           record: newOrga.id,
         });
-      } catch (error: unknown) {
+      } catch (error: any) {
+        Logger.log({ level: "error", message: error });
         res.status(400).send({
           success: false,
           message: "Une erreur est survenue durant l'ajout d'une organisation.",

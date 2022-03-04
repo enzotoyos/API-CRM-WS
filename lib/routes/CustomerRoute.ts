@@ -54,7 +54,8 @@ CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
       result.record.push(doc.data());
     });
     res.status(200).send(result);
-  } catch (error: unknown) {
+  } catch (error: any) {
+    Logger.log({ level: "error", message: error });
     res.status(400).send({
       success: false,
       message: "Une erreur est survenue durant la récupération d'un client.",
@@ -101,7 +102,8 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
         message: "Vous n'avez pas le droit d'accéder à cette ressource.",
       });
     }
-  } catch (error: unknown) {
+  } catch (error: any) {
+    Logger.log({ level: "error", message: error });
     res.status(400).send({
       success: false,
       message: "Une erreur est survenue durant la récupération d'un client.",
@@ -175,7 +177,8 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
           });
         }
       }
-    } catch (error) {
+    } catch (error : any) {
+      Logger.log({ level: "error", message: error });
       res.status(400).send({
         success: false,
         message: "Une erreur est survenue durant upload.",
@@ -213,7 +216,8 @@ CustomerRoute.post(
           imageUrl: result[0],
         });
       });
-    } catch (error: unknown) {
+    } catch (error: any) {
+      Logger.log({ level: "error", message: error });
       res.status(400).send({
         success: false,
         message: "Une erreur est survenue durant upload.",
@@ -241,7 +245,8 @@ CustomerRoute.delete(
           .status(200)
           .send({ success: true, message: "succès lors de la suppression" });
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
+      Logger.log({ level: "error", message: error });
       res.status(400).send({
         success: false,
         message: "Une erreur est survenue durant la suppression.",

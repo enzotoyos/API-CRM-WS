@@ -33,7 +33,7 @@ AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
       result.record.push(doc.data());
     });
     res.status(200).send(result);
-  } catch (error) {
+  } catch (error : any) {
     Logger.log({ level: "error", message: error });
     res.status(400).send({
       success: false,
@@ -128,7 +128,7 @@ AppointementRoute.post(
             message: "Rendez-vous Ajouté",
             record: appaointDoc.id,
           });
-      } catch (error) {
+      } catch (error : any) {
         Logger.log({ level: "error", message: error });
         res.status(400).send({
           success: false,
