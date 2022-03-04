@@ -24,6 +24,22 @@ jobs:
     - name: Install NPM Modules
       run: npm install
       
+    - name: Create .env File
+      run: | 
+        echo API_KEY="${{ secrets.API_KEY }}" >> .env
+        echo PORT=3000 >> .env
+        echo EMAIL="${{ secrets.EMAIL }}" >> .env
+        echo EMAIL_PASSWORD="${{ secrets.EMAIL_PASSWORD }}" >> .env
+        cat .env
+        
+    - name: Create .JSON_FIREBASE File
+      run: | 
+        cd ./config/
+        ls
+        echo "${{ secrets.KEY_FIREBASE }}" >> crm-ws-firebase-adminsdk.json
+        cat crm-ws-firebase-adminsdk.json
+        cd ..
+        
     - name: Build Project
       run: npm run build
 
