@@ -1,14 +1,19 @@
 import { Router, Request, Response } from "express";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import IResult from "../interface/IResult";
+import IOrganization from "../interface/IOrganization";
 import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
+import AdminController from "../controller/AdminController";
+import LoggerManager from "../../config/Logger";
 
 const OrganizationRoute = Router();
 const db = getFirestore();
 const organizationRef = db.collection("organizations");
 const adminRef = db.collection("admins");
 const tokenCtrl = new TokenController();
+const adminCtrl = new AdminController();
+const Logger = LoggerManager(__filename);
 
 /**
  * @api {get} organization/ Get All Organization
@@ -19,41 +24,37 @@ const tokenCtrl = new TokenController();
  *
  */
 OrganizationRoute.get("/", Interceptor, async (req: Request, res: Response) => {
-
-
- // Get the token of the current admin
-  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
- // Go through the admin collection with the admin token
-  const userDoc = db.collection("admins").doc(tokenDecod.uid);
- // Get admin infos
-  const doc = await userDoc.get();
-  
   const result: IResult = {
     success: true,
-    message: "La récupération des organisations par id admin a réussi.",
+    message: "La récupération des organisations a réussi.",
     record: [],
   };
- // listOrga contain all organization from the admin token
+  // Get the token of the current admin
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+  // Go through the admin collection with the admin token
+  const userDoc = db.collection("admins").doc(tokenDecod.uid);
+  // Get admin infos
+  const doc = await userDoc.get();
+
+  // listOrga contain all organization from the admin token
   const listOrga = doc.data().organization;
-  const allOrga = [];
   try {
- // For each loop through the list of organization and return organizations who have the admin token as id
-  for (let index in listOrga) {
-    const docOrga = organizationRef.doc(String(listOrga[index]));
-    const docu = await docOrga.get();
-    result.record.push(docu.data());
-}
- 
-    // const snapshot = await organizationRef.get();
-    // snapshot.forEach((doc) => {
-    //   result.record.push(doc.data());
-    // });
+    const snapshot = await organizationRef.get();
+    snapshot.forEach((temp) => {
+      let Iorga = null;
+      if (listOrga && listOrga.length > 0 && listOrga.includes(temp.id)) {
+        Iorga = temp.data();
+        Iorga.id = temp.id;
+        result.record.push(Iorga);
+      }
+    });
+
     res.status(200).send(result);
-  } catch (error: unknown) {
+  } catch (error: any) {
+    Logger.log({ level: "error", message: error });
     res.status(400).send({
       success: false,
-      message:
-        "Une erreur est survenue durant la récupération d'une organisation.",
+      message: "Une erreur est survenue durant la récupération des organisations.",
       error: error,
     });
   }
@@ -68,33 +69,41 @@ OrganizationRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-OrganizationRoute.get(
-  "/:id",
-  Interceptor,
-  async (req: Request, res: Response) => {
-    const result: IResult = {
-      success: true,
-      message: "La récupération de l'organisation a réussi.",
-    };
+OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
+  const result: IResult = {
+    success: true,
+    message: "La récupération de l'organisation a réussi.",
+    result: undefined
+  };
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
 
-    try {
+  try {
+    if (await adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, req.params.id)) {
       const orgaRef = organizationRef.doc(req.params.id);
       const doc = await orgaRef.get();
       if (!doc.exists) {
-        result.message = "Aucune organisation correspondant";
+        result.message = "Aucune organisation correspondante";
       } else {
         result.result = doc.data();
       }
       res.status(200).send(result);
-    } catch (error: unknown) {
-      res.status(400).send({
+    } else {
+      res.status(401).send({
         success: false,
         message:
-          "Une erreur est survenue durant la récupération d'une organisation.",
-        error: error,
+          "Vous n'avez pas le droit d'accéder à cette ressource."
       });
     }
+  } catch (error: any) {
+    Logger.log({ level: "error", message: error });
+    res.status(400).send({
+      success: false,
+      message:
+        "Une erreur est survenue durant la récupération d'une organisation.",
+      error: error,
+    });
   }
+}
 );
 
 /**

@@ -1,4 +1,5 @@
 interface IOrganization {
+    id?: string;
     address: string;
     customers: string[];
     name: string;
