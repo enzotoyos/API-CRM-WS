@@ -6,8 +6,7 @@ import * as dotenv from "dotenv";
 const vault = new Vault(process.env.KEY_ENCRYPT_FIREBASE);
 //déchiffrement du JSON avec la clé dans le .env
 vault.decrypt("./config/crm-ws-firebase-adminsdk.enc.json");
-
-import * as serviceAccount from "./crm-ws-firebase-adminsdk.json";
+;
 
 admin.initializeApp({
   credential: admin.credential.cert(vault.secrets as any),
