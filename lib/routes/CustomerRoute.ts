@@ -257,18 +257,15 @@ const deleteImage = async (imageLink: string, idCustomer: string) => {
     return false;
   } else {
     let custoContent = userDoc.data();
-    console.log("CustoContent : ", custoContent);
-    console.log(custoContent.imageLink[0]);
-    console.log(imageLink);
-
-    const index = custoContent.imageLink.indexOf(imageLink);
-    console.log("index", index);
+    let tImageLink: String[] = [];
+    custoContent.imageLink.forEach((item: string) => {
+      tImageLink.push(decodeURIComponent(item));
+    });
+    const index = tImageLink.indexOf(imageLink);
 
     if (index > -1) {
       custoContent.imageLink.splice(index, 1);
-      console.log("test", custoContent);
     }
-    console.log("CustoContentAfter: ", custoContent);
     db.collection("customers").doc(idCustomer).update(custoContent);
     return true;
   }

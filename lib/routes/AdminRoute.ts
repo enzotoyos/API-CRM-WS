@@ -65,10 +65,21 @@ AdminRoute.post("/login", async (req: Request, res: Response) => {
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  * @apiParam {String} id          Obligatoire l'id de l'admin.
- *
+ * 
  * @apiSuccess {boolean}  success       vrai pour la réussite de la récupération
  * @apiSuccess {String}   message       message
  * @apiSuccess {Object}   record        les informations de l'admin
+ * 
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "id": 4711
+ *     }
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "firstname": "John",
+ *       "lastname": "Doe"
+ *     }
  * 
  */
 AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {

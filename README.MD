@@ -13,6 +13,14 @@
 
 > https://test.mira-ceti.ovh
 
+### Lien APIDOC
+
+> https://apidoc.mira-ceti.ovh
+
+### Lien Documentation Server
+
+> https://doc.mira-ceti.ovh
+
 ### Admin par défaut
 
 > EMAIL : admin.default@crm.ynov
