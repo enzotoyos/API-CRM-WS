@@ -3,5 +3,13 @@
     "version": "1.0.0",
     "description": "CRM-WS API Documentation",
     "title": "API CRM-WS Documentation",
-    "url": "https://api.github.com/v1"
-} 
+    "url": "https://test.mira-ceti.ovh/",
+    "header": {
+        "title": "README",
+        "filename": "README.md"
+    },
+    "template": {
+        "withCompare": true,
+        "withGenerator": false
+      }
+}

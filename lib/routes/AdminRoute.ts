@@ -43,16 +43,17 @@ AdminRoute.post("/login", async (req: Request, res: Response) => {
 });
 
 /**
- * @api {get} admin/ Get Admin
+ * @api {get} admin/ Get Admin By Id
  * @apiGroup Admin
- * @apiName getAdmin
- * @apiDescription Get Admin
+ * @apiName getAdminById
+ * @apiDescription Récupère un admin via son id
  * @apiPermission Token
+ * @apiQuery {String} id    Id de l'admin
  *
  */
 AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
   const id: string = req.params.id;
-  const userDoc = db.collection("admins").doc(id);
+  const userDoc = adminRef.doc(id);
   const doc = await userDoc.get();
   if (!doc.exists) {
     res.status(403).send({
@@ -61,6 +62,41 @@ AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
     });
   } else {
     res.status(200).send({ sucess: true, value: doc.data() });
+  }
+});
+
+/**
+ * @api {get} admin/ Get All Admin
+ * @apiGroup Admin
+ * @apiName getAllAdmin
+ * @apiDescription Récupère tous les admins qui sont créé.
+ * @apiPermission Token
+ *
+ */
+AdminRoute.get("/", Interceptor, async (req: Request, res: Response) => {
+  const result = {
+    success: true,
+    message: 'La récupération de tous les admins a réussi',
+    total: 0,
+    record: []
+  };
+
+  try {
+    const snapshot = await adminRef.get();
+    snapshot.forEach((temp) => {
+      let aAdmin = temp.data();
+      aAdmin.id = temp.id;
+      result.record.push(aAdmin);
+    });
+    result.total = result.record.length;
+    res.status(200).send(result);
+  } catch (error) {
+    Logger.log({ level: 'error', message: error });
+    res.status(500).send({
+      success: false,
+      message: "Une erreur est survenue durant la récupération des admins",
+      error: error.message
+    });
   }
 });
 
@@ -143,7 +179,7 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
-    Logger.log({level: 'error', message: error});
+    Logger.log({ level: 'error', message: error });
     res.status(403).send({ success: false, message: error.message });
   }
 });
@@ -190,7 +226,7 @@ AdminRoute.delete("/", Interceptor, async (req: Request, res: Response) => {
         .status(200)
         .send({ success: true, message: "Utilisateur supprimé avec succès" });
     } catch (error) {
-      Logger.log({level: 'error', message: error});
+      Logger.log({ level: 'error', message: error });
       res
         .status(403)
         .send({ success: false, message: "erreur lors de la suppression" });
