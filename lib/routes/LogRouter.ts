@@ -8,7 +8,7 @@ import LoggerManager from "../../config/Logger";
 const LogRouter = Router();
 const tokenCtrl = new TokenController();
 const adminCtrl = new AdminController();
-const Logger = LoggerManager(__filename);
+//const Logger = LoggerManager(__filename);
 
 LogRouter.get("/", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
