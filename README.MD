@@ -1,18 +1,19 @@
-
 ## API CRM-WS
 
-### Technologie 
+![Build API](https://github.com/enzotoyos/API-CRM-WS/workflows/main/)
+
+### Technologie
 
 - NodeJS
-    - Avec une surcouche de TypeScript
-    - Express
+  - Avec une surcouche de TypeScript
+  - Express
 - BDD Firestore
 
-### Installation 
+### Installation
 
 - npm i
 - npm install -g ts-node
-- 
+-
 
 #### Fichier de conf
 
