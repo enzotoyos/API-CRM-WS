@@ -25,7 +25,7 @@
 
 > EMAIL : admin.default@crm.ynov
 
-> API_KEY :
+> API_KEY : 
 
 
 ### Installation
@@ -51,4 +51,7 @@ SECURE_KEY=
 # Configuration serveur SMTP
 EMAIL=
 EMAIL_PASSWORD=
+
+# Clé de déchiffrage du fichier de conf de Firebase
+KEY_ENCRYPT_FIREBASE=
 ```
