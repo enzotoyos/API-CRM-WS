@@ -6,10 +6,12 @@ import {
   getFirestore,
 } from "firebase-admin/firestore";
 import IResult from "../interface/IResult";
+import { URL } from "url";
 
 const db = getFirestore();
 const adminRef = db.collection("admins");
 const orgaRef = db.collection("organizations");
+const custoRef = db.collection("customers");
 
 class AdminController {
   /**
@@ -99,7 +101,6 @@ class AdminController {
   async login(email: string, password: string): Promise<IResult> {
     let result: IResult = { success: false, record: {} };
     const API_KEY = process.env.API_KEY;
-    console.log(API_KEY);
     const body = JSON.stringify({
       password: password,
       email: email,

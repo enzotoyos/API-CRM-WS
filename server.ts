@@ -41,11 +41,7 @@ import LogRouter from "./lib/routes/LogRouter";
 // ------------------------ Définition des Routes -------------------------
 // Route Principale
 app.get("/", (req: Request, res: Response) => {
-  res.send(
-    "[" +
-      process.env.NODE_ENV +
-      "] - Welcome to CRM-WS API. You can find documentation to : <website>"
-  );
+  res.send("[" + process.env.NODE_ENV + "] - Welcome to CRM-WS API. You can find documentation to : <website>");
 });
 // Route qui vérifie que l'appli est toujours connecté
 app.get("/alive", (req: Request, res: Response) => {
@@ -61,11 +57,12 @@ app.use("/log", LogRouter);
 //Démarrage de l'API
 const httpServer = http.createServer(app);
 httpServer.listen(process.env.PORT, () => {
-  Logger.info(
+  Logger.info("INFO - CRM-WS [" +process.env.NODE_ENV + "] - API Started on port : " +process.env.PORT);
+  console.log(
     "INFO - CRM-WS [" +
-      process.env.NODE_ENV +
-      "] - API Started on port : " +
-      process.env.PORT
+    process.env.NODE_ENV +
+    "] - API Started on port : " +
+    process.env.PORT
   );
 });
 
