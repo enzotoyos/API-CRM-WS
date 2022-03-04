@@ -7,7 +7,6 @@ import * as dotenv from "dotenv";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-import * as serviceAccount from "./crm-ws-firebase-adminsdk.json";
 
 const vault = new Vault(process.env.KEY_ENCRYPT_FIREBASE);
 vault.decrypt("./config/crm-ws-firebase-adminsdk.enc.json");
