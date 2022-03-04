@@ -32,7 +32,6 @@ AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
     });
     res.status(200).send(result);
   } catch (error: unknown) {
-    console.log(error);
     res.status(400).send({
       success: false,
       message:
@@ -51,32 +50,35 @@ AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-AppointementRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
-  const result: IResult = {
-    success: true,
-    message: "La récupération du rendez-vous a réussi.",
-  };
+AppointementRoute.get(
+  "/:id",
+  Interceptor,
+  async (req: Request, res: Response) => {
+    const result: IResult = {
+      success: true,
+      message: "La récupération du rendez-vous a réussi.",
+    };
 
-  try {
-    const appoinRef = appointementRef.doc(req.params.id);
-    const doc = await appoinRef.get();
-    if (!doc.exists) {
-      console.log("No such document!");
-      result.message = "Aucun rendez-vous correspondant";
-    } else {
-      result.result = doc.data();
+    try {
+      const appoinRef = appointementRef.doc(req.params.id);
+      const doc = await appoinRef.get();
+      if (!doc.exists) {
+        console.log("No such document!");
+        result.message = "Aucun rendez-vous correspondant";
+      } else {
+        result.result = doc.data();
+      }
+      res.status(200).send(result);
+    } catch (error: unknown) {
+      res.status(400).send({
+        success: false,
+        message:
+          "Une erreur est survenue durant la récupération d'un rendez-vous.",
+        error: error,
+      });
     }
-    res.status(200).send(result);
-  } catch (error: unknown) {
-    console.log(error);
-    res.status(400).send({
-      success: false,
-      message:
-        "Une erreur est survenue durant la récupération d'un rendez-vous.",
-      error: error,
-    });
   }
-});
+);
 
 /**
  * @api {post} appointement/ Add new Appointement
@@ -89,41 +91,49 @@ AppointementRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
  * @apiBody {Timestamp} date          Mandatory  date of the Appointement.
  * @apiBody {String} place            Optional place of the Appointement.
  */
-AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => {
-  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-  // vérification du bon format de la date
-  // regexDate(req.body.date) == false
-  if (false) {
-    res.status(403).send({ sucess: false, message: "format de la date incorrect" });
-  } else {
-    try {
-      console.log(req.body);
-      console.log(tokenDecod.uid);
-      
-      const appaointDoc = await appointementRef.add({
-        resume: req.body.resume,
-        date: req.body.date,
-        place: req.body.place,
-        createdAt: Date.now(),
-        createdBy: tokenDecod.uid,
-      });
+AppointementRoute.post(
+  "/",
+  Interceptor,
+  async (req: Request, res: Response) => {
+    const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+    // vérification du bon format de la date
+    // regexDate(req.body.date) == false
+    if (false) {
+      res
+        .status(403)
+        .send({ sucess: false, message: "format de la date incorrect" });
+    } else {
+      try {
+        const appaointDoc = await appointementRef.add({
+          resume: req.body.resume,
+          date: req.body.date,
+          place: req.body.place,
+          createdAt: Date.now(),
+          createdBy: tokenDecod.uid,
+        });
 
-      const docCusto = custoRef.doc(req.body.id);
-      await docCusto.update({
-        appointement: FieldValue.arrayUnion(appaointDoc.id),
-      });
+        const docCusto = custoRef.doc(req.body.id);
+        await docCusto.update({
+          appointement: FieldValue.arrayUnion(appaointDoc.id),
+        });
 
-      res.status(200).send({ success: true, message: "Rendez-vous Ajouté", record: appaointDoc.id });
-    } catch (error: unknown) {
-      console.log(error);
-      res.status(400).send({
-        success: false,
-        message: "Une erreur est survenue durant l'ajout d'un rendez-vous.",
-        error: error,
-      });
+        res
+          .status(200)
+          .send({
+            success: true,
+            message: "Rendez-vous Ajouté",
+            record: appaointDoc.id,
+          });
+      } catch (error: unknown) {
+        res.status(400).send({
+          success: false,
+          message: "Une erreur est survenue durant l'ajout d'un rendez-vous.",
+          error: error,
+        });
+      }
     }
   }
-});
+);
 
 /**
  * @api {put} appointement/:id Modify an Appointement
@@ -136,22 +146,24 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
  * @apiBody {Timestamp} date          Mandatory  date of the Appointement.
  * @apiBody {String} place            Optional place of the Appointement.
  */
-AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
-  console.log(req.query.id);
+AppointementRoute.put(
+  "/:id",
+  Interceptor,
+  async (req: Request, res: Response) => {
+    const appoinRef = appointementRef.doc(String(req.params.id));
 
-  const appoinRef = appointementRef.doc(String(req.params.id));
+    await appoinRef.update({
+      resume: req.body.resume,
+      date: req.body.date,
+      place: req.body.place,
+      createdAt: Date.now(),
+      createdBy: "",
+    });
 
-  await appoinRef.update({
-    resume: req.body.resume,
-    date: req.body.date,
-    place: req.body.place,
-    createdAt: Date.now(),
-    createdBy: "",
-  });
-
-  const result = { success: true, message: "putAppointement" };
-  res.status(200).send(result);
-});
+    const result = { success: true, message: "putAppointement" };
+    res.status(200).send(result);
+  }
+);
 
 /**
  * @api {delete} appointement/:id delete an Appointement
@@ -160,12 +172,16 @@ AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) =
  * @apiDescription supprime un rendez-vous
  * @apiPermission Token
  */
-AppointementRoute.delete("/:id", Interceptor, async (req: Request, res: Response) => {
-  await appointementRef.doc(String(req.params.id)).delete();
+AppointementRoute.delete(
+  "/:id",
+  Interceptor,
+  async (req: Request, res: Response) => {
+    await appointementRef.doc(String(req.params.id)).delete();
 
-  const result = { success: true, message: "deleteAppointement" };
-  res.status(200).send(result);
-});
+    const result = { success: true, message: "deleteAppointement" };
+    res.status(200).send(result);
+  }
+);
 
 const regexDate = (date: string) => {
   const regexDate = new RegExp(

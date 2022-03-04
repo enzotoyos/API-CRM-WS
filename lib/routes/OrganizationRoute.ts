@@ -32,7 +32,6 @@ OrganizationRoute.get("/", Interceptor, async (req: Request, res: Response) => {
     });
     res.status(200).send(result);
   } catch (error: unknown) {
-    console.log(error);
     res.status(400).send({
       success: false,
       message:
@@ -51,32 +50,34 @@ OrganizationRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  *
  */
-OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
-  const result: IResult = {
-    success: true,
-    message: "La récupération de l'organisation a réussi.",
-  };
+OrganizationRoute.get(
+  "/:id",
+  Interceptor,
+  async (req: Request, res: Response) => {
+    const result: IResult = {
+      success: true,
+      message: "La récupération de l'organisation a réussi.",
+    };
 
-  try {
-    const orgaRef = organizationRef.doc(req.params.id);
-    const doc = await orgaRef.get();
-    if (!doc.exists) {
-      console.log("No such document!");
-      result.message = "Aucune organisation correspondant";
-    } else {
-      result.result = doc.data();
+    try {
+      const orgaRef = organizationRef.doc(req.params.id);
+      const doc = await orgaRef.get();
+      if (!doc.exists) {
+        result.message = "Aucune organisation correspondant";
+      } else {
+        result.result = doc.data();
+      }
+      res.status(200).send(result);
+    } catch (error: unknown) {
+      res.status(400).send({
+        success: false,
+        message:
+          "Une erreur est survenue durant la récupération d'une organisation.",
+        error: error,
+      });
     }
-    res.status(200).send(result);
-  } catch (error: unknown) {
-    console.log(error);
-    res.status(400).send({
-      success: false,
-      message:
-        "Une erreur est survenue durant la récupération d'une organisation.",
-      error: error,
-    });
   }
-});
+);
 
 /**
  * @api {post} organization/ Add new Organization
@@ -89,50 +90,51 @@ OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
  * @apiBody {String} name           Mandatory  name of the Organization.
  * @apiBody {Array} customers        Mandatory Array of Customers.
  */
-OrganizationRoute.post("/", Interceptor, async (req: Request, res: Response) => {
-  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-  const message = testValueInBody(req.body.address, req.body.name);
-  console.log(message);
+OrganizationRoute.post(
+  "/",
+  Interceptor,
+  async (req: Request, res: Response) => {
+    const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+    const message = testValueInBody(req.body.address, req.body.name);
 
-  if (message === true) {
-    try {
-      // On crée une organisation
-      const newOrga = await organizationRef.add({
-        address: req.body.address,
-        name: req.body.name,
-        NbEmployees: req.body.NbEmployees ? req.body.NbEmployees : "0",
-        customers: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        createdBy: tokenDecod.uid,
-        logo: [],
-      });
-      // Puis on l'ajoute dans le tableau de l'admin
-      const docAdmin = adminRef.doc(tokenDecod.uid);
-      await docAdmin.update({
-        organization: FieldValue.arrayUnion(newOrga.id),
-      });
-      res.status(200).send({
-        success: true,
-        message: "Organisation Ajoutée",
-        record: newOrga.id,
-      });
-    } catch (error: unknown) {
-      console.log(error);
-      res.status(400).send({
+    if (message === true) {
+      try {
+        // On crée une organisation
+        const newOrga = await organizationRef.add({
+          address: req.body.address,
+          name: req.body.name,
+          NbEmployees: req.body.NbEmployees ? req.body.NbEmployees : "0",
+          customers: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          createdBy: tokenDecod.uid,
+          logo: [],
+        });
+        // Puis on l'ajoute dans le tableau de l'admin
+        const docAdmin = adminRef.doc(tokenDecod.uid);
+        await docAdmin.update({
+          organization: FieldValue.arrayUnion(newOrga.id),
+        });
+        res.status(200).send({
+          success: true,
+          message: "Organisation Ajoutée",
+          record: newOrga.id,
+        });
+      } catch (error: unknown) {
+        res.status(400).send({
+          success: false,
+          message: "Une erreur est survenue durant l'ajout d'une organisation.",
+          error: error,
+        });
+      }
+    } else {
+      res.status(403).send({
         success: false,
         message: "Une erreur est survenue durant l'ajout d'une organisation.",
-        error: error,
+        error: message,
       });
     }
-  } else {
-    res.status(403).send({
-      success: false,
-      message: "Une erreur est survenue durant l'ajout d'une organisation.",
-      error: message,
-    });
   }
-}
 );
 
 /**
@@ -148,23 +150,25 @@ OrganizationRoute.post("/", Interceptor, async (req: Request, res: Response) => 
  * @apiBody {Number} nbworkers         Optional number of workers inside the Organization.
  * @apiBody {String} logo              Optional logo of the Organization.
  */
-OrganizationRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
-  console.log(req.query.id);
+OrganizationRoute.put(
+  "/:id",
+  Interceptor,
+  async (req: Request, res: Response) => {
+    const orgaRef = organizationRef.doc(String(req.params.id));
 
-  const orgaRef = organizationRef.doc(String(req.params.id));
+    await orgaRef.update({
+      address: req.body.address,
+      name: req.body.name,
+      NbEmployees: req.body.NbEmployees,
+      //logo à mettre
+      updatedAt: Date.now(),
+      createdAt: Date.now(),
+    });
 
-  await orgaRef.update({
-    address: req.body.address,
-    name: req.body.name,
-    NbEmployees: req.body.NbEmployees,
-    //logo à mettre
-    updatedAt: Date.now(),
-    createdAt: Date.now(),
-  });
-
-  const result = { success: true, message: "putOrganization" };
-  res.status(200).send(result);
-});
+    const result = { success: true, message: "putOrganization" };
+    res.status(200).send(result);
+  }
+);
 
 /**
  * @api {delete} organization/:id delete an Organization
@@ -173,51 +177,51 @@ OrganizationRoute.put("/:id", Interceptor, async (req: Request, res: Response) =
  * @apiDescription supprime une organisation
  * @apiPermission Token
  */
-OrganizationRoute.delete("/:id", Interceptor, async (req: Request, res: Response) => {
-  if (req.params.id == null) {
-    const result = {
-      success: false,
-      message: "Suppression impossible. le champ ID est obligatoire",
-    };
-    res.status(200).send(result);
-  } else {
-    const orgaList = await db
-      .collection("admins")
-      .where("organization", "array-contains", req.params.id)
-      .get();
-    if (orgaList.empty) {
-      res.status(403).send({
-        sucess: false,
-        message: "aucun Admins correspond a cette organisation",
-      });
-      return;
-    } else {
-      let idDocument: string;
-      let documentAdmins;
-      orgaList.forEach((doc) => {
-        idDocument = doc.id;
-        documentAdmins = doc.data();
-      });
-
-      //recupere dans l'array l'endroit ou  l'id est stocké
-      const index = documentAdmins.organization.indexOf(req.params.id);
-      if (index > -1) {
-        documentAdmins.organization.splice(index, 1); // supprime l'id dans le tableau
-        console.log(documentAdmins);
-      }
-      //push le json sur firebase dans 'admins'
-      const docRef = db
-        .collection("admins")
-        .doc(idDocument)
-        .update(documentAdmins);
-      //supprime le json dans 'Organisation'
-      await organizationRef.doc(String(req.params.id)).delete();
-
-      const result = { success: true, message: "deleteOrganization" };
+OrganizationRoute.delete(
+  "/:id",
+  Interceptor,
+  async (req: Request, res: Response) => {
+    if (req.params.id == null) {
+      const result = {
+        success: false,
+        message: "Suppression impossible. le champ ID est obligatoire",
+      };
       res.status(200).send(result);
+    } else {
+      const orgaList = await db
+        .collection("admins")
+        .where("organization", "array-contains", req.params.id)
+        .get();
+      if (orgaList.empty) {
+        res.status(403).send({
+          sucess: false,
+          message: "aucun Admins correspond a cette organisation",
+        });
+        return;
+      } else {
+        let idDocument: string;
+        let documentAdmins;
+        orgaList.forEach((doc) => {
+          idDocument = doc.id;
+          documentAdmins = doc.data();
+        });
+
+        //recupere dans l'array l'endroit ou  l'id est stocké
+        const index = documentAdmins.organization.indexOf(req.params.id);
+        if (index > -1) {
+          documentAdmins.organization.splice(index, 1); // supprime l'id dans le tableau
+        }
+        //push le json sur firebase dans 'admins'
+        db.collection("admins").doc(idDocument).update(documentAdmins);
+        //supprime le json dans 'Organisation'
+        await organizationRef.doc(String(req.params.id)).delete();
+
+        const result = { success: true, message: "deleteOrganization" };
+        res.status(200).send(result);
+      }
     }
   }
-});
+);
 
 const testValueInBody = (address: string, name: string) => {
   if (address == null) {

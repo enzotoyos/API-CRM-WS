@@ -51,7 +51,6 @@ CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
     });
     res.status(200).send(result);
   } catch (error: unknown) {
-    console.log(error);
     res.status(400).send({
       success: false,
       message: "Une erreur est survenue durant la récupération d'un client.",
@@ -79,7 +78,6 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
     const custoRef = customerRef.doc(req.params.id);
     const doc = await custoRef.get();
     if (!doc.exists) {
-      console.log("No such document!");
       result.message = "Aucun client correspondant";
     } else {
       result.result = doc.data();
@@ -87,7 +85,6 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
     }
     res.status(200).send(result);
   } catch (error: unknown) {
-    console.log(error);
     res.status(400).send({
       success: false,
       message: "Une erreur est survenue durant la récupération d'un client.",
@@ -121,18 +118,15 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
 
   if (message === true) {
     try {
-      console.log(req.body);
       const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
       const userDoc = adminRef.doc(tokenDecod.uid);
 
       const doc = await userDoc.get();
       if (!doc.exists) {
-        res
-          .status(500)
-          .send({
-            success: false,
-            message: "Votre compte Admin n'existe pas.",
-          });
+        res.status(500).send({
+          success: false,
+          message: "Votre compte Admin n'existe pas.",
+        });
       } else {
         const isOrga = doc.data().organization.includes(req.body.id);
         if (isOrga) {
@@ -189,25 +183,28 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
  * @apiBody {String} image          Image en Base64
 
  */
-CustomerRoute.post("/upload", Interceptor, async (req: Request, res: Response) => {
-  try {
-    uploadImage(req.body.image, req.body.idCustomer).then(function (result) {
-      res.status(200).send({
-        sucess: true,
-        message: "Image uploaded",
-        Date: Date.now(),
-        imageUrl: result[0],
+CustomerRoute.post(
+  "/upload",
+  Interceptor,
+  async (req: Request, res: Response) => {
+    try {
+      uploadImage(req.body.image, req.body.idCustomer).then(function (result) {
+        res.status(200).send({
+          sucess: true,
+          message: "Image uploaded",
+          Date: Date.now(),
+          imageUrl: result[0],
+        });
       });
-    });
-  } catch (error: unknown) {
-    console.log(error);
-    res.status(400).send({
-      success: false,
-      message: "Une erreur est survenue durant upload.",
-      error: error,
-    });
+    } catch (error: unknown) {
+      res.status(400).send({
+        success: false,
+        message: "Une erreur est survenue durant upload.",
+        error: error,
+      });
+    }
   }
-});
+);
 
 const uploadImage = (data: string, idClient: string) => {
   return new Promise((resolve) => {
@@ -227,8 +224,6 @@ const uploadImage = (data: string, idClient: string) => {
         if (err) {
           throw err;
         } else {
-          console.log("upload OK");
-
           file
             .getSignedUrl({
               action: "read",
