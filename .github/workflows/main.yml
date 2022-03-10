@@ -46,3 +46,4 @@ jobs:
           key: ${{ secrets.PRIV_KEY }}
           source: "./apidoc/*"
           target: "/var/www/apidoc/"
+#           target: "/home/${{ secrets.USERNAME }}/"

@@ -1,6 +1,7 @@
 ## API CRM-WS
 
 [![Build API](https://github.com/enzotoyos/API-CRM-WS/actions/workflows/main.yml/badge.svg)](https://github.com/enzotoyos/API-CRM-WS/actions/workflows/main.yml)
+[![Deploy API](https://github.com/enzotoyos/API-CRM-WS/actions/workflows/main.yml/badge.svg?event=deployment)](https://github.com/enzotoyos/API-CRM-WS/actions/workflows/main.yml)
 
 ### Technologie
 
@@ -25,8 +26,7 @@
 
 > EMAIL : admin.default@crm.ynov
 
-> API_KEY : 
-
+> API_KEY :
 
 ### Installation
 

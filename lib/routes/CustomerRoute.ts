@@ -261,8 +261,8 @@ const deleteImage = async (imageLink: string, idCustomer: string) => {
   if (!userDoc.exists) {
     return false;
   } else {
-    let custoContent = userDoc.data();
-    let tImageLink: String[] = [];
+    const custoContent = userDoc.data();
+    const tImageLink: string[] = [];
     custoContent.imageLink.forEach((item: string) => {
       tImageLink.push(decodeURIComponent(item));
     });
@@ -271,10 +271,10 @@ const deleteImage = async (imageLink: string, idCustomer: string) => {
     if (index > -1) {
       custoContent.imageLink.splice(index, 1);
     }
-    let value = imageLink.split(
+    const value = imageLink.split(
       "https://storage.googleapis.com/crm-ws.appspot.com/customersPhoto/"
     );
-    let value2 = value[1].split("?");
+    const value2 = value[1].split("?");
 
     db.collection("customers").doc(idCustomer).update(custoContent);
     storageRef
