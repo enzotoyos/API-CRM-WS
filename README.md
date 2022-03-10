@@ -8,12 +8,17 @@
   - Avec une surcouche de TypeScript
   - Express
 - BDD Firestore
+- Bucket image (Google Cloud)
 
 ### Lien API
 
 - API : https://test.mira-ceti.ovh
 - API DOC : https://apidoc.mira-ceti.ovh
 - DOC SERVEUR : https://doc.mira-ceti.ovh
+
+### API DOC Exemple
+
+<img src="https://user-images.githubusercontent.com/58291299/157634327-baaa8e67-7936-4c1c-b028-b2414fd0d34b.png" alt="drawing" width="400"/>
 
 ### Admin par défaut
 
