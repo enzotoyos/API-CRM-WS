@@ -11,27 +11,19 @@
 
 ### Lien API
 
-> https://test.mira-ceti.ovh
-
-### Lien APIDOC
-
-> https://apidoc.mira-ceti.ovh
-
-### Lien Documentation Server
-
-> https://doc.mira-ceti.ovh
+- API : https://test.mira-ceti.ovh
+- API DOC : https://apidoc.mira-ceti.ovh
+- DOC SERVEUR : https://doc.mira-ceti.ovh
 
 ### Admin par défaut
 
 > EMAIL : admin.default@crm.ynov
-
 > API_KEY :
 
 ### Installation
 
 - npm i
 - npm install -g ts-node
--
 
 ### Fichier de configuration
 
