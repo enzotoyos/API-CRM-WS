@@ -41,6 +41,19 @@ const Logger = LoggerManager(__filename);
  * @apiSuccess {String}   token         le token pour utiliser les routes
  * @apiSuccess {Number}   expiresIn     Date et heure d'expiration du token
  * 
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "email": "exemple.mail@mail.com",
+ *       "api_key": "MyUniqueAPIKEY"
+ *     }
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": "La connexion à réussi",
+ *       "expiresIn": "10/03/2022, 10:35:17",
+ *       "token": "TemporaryTokenGenerateToAccessRouter",
+ *       "success": true
+ *      }
  */
 AdminRoute.post("/login", async (req: Request, res: Response) => {
   if (req.body.email && req.body.api_key) {
@@ -69,17 +82,6 @@ AdminRoute.post("/login", async (req: Request, res: Response) => {
  * @apiSuccess {boolean}  success       vrai pour la réussite de la récupération
  * @apiSuccess {String}   message       message
  * @apiSuccess {Object}   record        les informations de l'admin
- * 
- * @apiParamExample {json} Request-Example:
- *     {
- *       "id": 4711
- *     }
- * @apiSuccessExample {json} Success-Response:
- *     HTTP/1.1 200 OK
- *     {
- *       "firstname": "John",
- *       "lastname": "Doe"
- *     }
  * 
  */
 AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
