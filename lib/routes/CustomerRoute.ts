@@ -7,6 +7,7 @@ import admin from "firebase-admin";
 import TokenController from "../controller/TokenController";
 import { v4 as uuidv4 } from "uuid";
 import AdminController from "../controller/AdminController";
+import UtilsController from "../controller/UtilsController";
 import LoggerManager from "../../config/Logger";
 
 const CustomerRoute = Router();
@@ -16,6 +17,7 @@ const customerRef = db.collection("customers");
 const orgaRef = db.collection("organizations");
 const mailCtrl = new MailController();
 const tokenCtrl = new TokenController();
+const utils = new UtilsController();
 const adminCtrl = new AdminController();
 const Logger = LoggerManager(__filename);
 
@@ -128,14 +130,7 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
  * @apiBody {Number} Age            Optionnal age.
  */
 CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
-  const message = testValueInBody(
-    req.body.email,
-    req.body.phone,
-    req.body.name,
-    req.body.surname
-  );
-
-  if (message === true) {
+  if (utils.isFill(req.body.email) && utils.isFill(req.body.phone) && utils.isFill(req.body.surname) && utils.isFill(req.body.email)) {
     try {
       const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
       const userDoc = adminRef.doc(tokenDecod.uid);
@@ -188,7 +183,7 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
   } else {
     res.status(403).send({
       success: false,
-      error: message,
+      error: "Vous devez renseinger tous les champs suivants : Nom / Prénom / Mail / Téléphone",
     });
   }
 });
@@ -340,25 +335,6 @@ const getListImage = async (idCustomer: string) => {
     } else {
       return imageLink;
     }
-  }
-};
-
-const testValueInBody = (
-  email: string,
-  phone: number,
-  name: string,
-  surname: string
-) => {
-  if (email === null) {
-    return "le champ email est manquant";
-  } else if (phone === null) {
-    return "le champ phone est manquant";
-  } else if (!name) {
-    return "le champ name est manquant";
-  } else if (!surname) {
-    return "le champ surname est manquant";
-  } else {
-    return true;
   }
 };
 

@@ -5,6 +5,7 @@ import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
 import AdminController from "../controller/AdminController";
 import MailController from "../controller/MailController";
+import UtilsController from "../controller/UtilsController";
 import LoggerManager = require("../../config/Logger");
 
 const db = getFirestore();
@@ -12,6 +13,7 @@ const AdminRoute = Router();
 const AuthCtrl = new AdminController();
 const mailCtrl = new MailController();
 const tokenCtrl = new TokenController();
+const utils = new UtilsController();
 const adminRef = db.collection("admins");
 const Logger = LoggerManager(__filename);
 
@@ -150,7 +152,6 @@ AdminRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiBody {String} email              Mandatory Admin Email
  * @apiBody {String} name               Mandatory Admin Name.
  * @apiBody {String} surname            Mandatory Admin Lastname.
- * @apiBody {String} phone              Mandatory Admin phone.
  * 
  * @apiSuccess {boolean}  success       vrai pour la réussite de la création
  * @apiSuccess {String}   message       message
@@ -183,40 +184,46 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
 
     // isSpam = false we can create Admin
     if (!isSpam) {
-      const userRecord = await getAuth().createUser({
-        email: req.body.email,
-        emailVerified: false,
-        password: api_key,
-        displayName: req.body.name,
-        disabled: false,
-      });
-      const sLink = await getAuth().generateEmailVerificationLink(
-        req.body.email
-      );
-      mailCtrl.sendInitPwd(
-        req.body.name + " " + req.body.surname,
-        req.body.email,
-        sLink
-      );
+      if (utils.isFill(req.body.email) && utils.isFill(req.body.name) && utils.isFill(req.body.surname)) {
+        const userRecord = await getAuth().createUser({
+          email: req.body.email,
+          emailVerified: false,
+          password: api_key,
+          displayName: req.body.name,
+          disabled: false,
+        });
+        const sLink = await getAuth().generateEmailVerificationLink(
+          req.body.email
+        );
+        mailCtrl.sendInitPwd(
+          req.body.name + " " + req.body.surname,
+          req.body.email,
+          sLink
+        );
 
-      adminRef.doc(userRecord.uid).set({
-        email: req.body.email,
-        api_key: api_key,
-        name: req.body.name,
-        surname: req.body.surname,
-        phone: req.body.phone,
-        organization: [],
-        createdAt: Date.now(),
-        createdBy: tokenDecod.uid,
-      });
+        adminRef.doc(userRecord.uid).set({
+          email: req.body.email,
+          api_key: api_key,
+          name: req.body.name,
+          surname: req.body.surname,
+          organization: [],
+          createdAt: Date.now(),
+          createdBy: tokenDecod.uid,
+        });
 
-      res.status(200).send({
-        success: true,
-        message:
-          "L'administrateur a bien été ajouté. Un email de validation a été envoyé.",
-        record: userRecord.uid,
-        api_key: api_key,
-      });
+        res.status(200).send({
+          success: true,
+          message:
+            "L'administrateur a bien été ajouté. Un email de validation a été envoyé.",
+          record: userRecord.uid,
+          api_key: api_key,
+        });
+      } else {
+        res.status(400).send({
+          success: false,
+          message: "Vous devez renseinger tous les champs suivants : email / nom / prénom",
+        });
+      }
     } else {
       res.status(403).send({
         success: false,

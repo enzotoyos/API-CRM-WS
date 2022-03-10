@@ -3,12 +3,14 @@ import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import IResult from "../interface/IResult";
 import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
+import UtilsController from "../controller/UtilsController";
 import LoggerManager from "../../config/Logger";
 
 const Logger = LoggerManager(__filename);
 const AppointementRoute = Router();
 const db = getFirestore();
 const tokenCtrl = new TokenController();
+const utils = new UtilsController();
 const appointementRef = db.collection("appointements");
 const custoRef = db.collection("customers");
 
@@ -92,18 +94,15 @@ AppointementRoute.get(
  * @apiDescription Ajoute un rendez-vous
  * @apiPermission Token
  *
- * @apiBody {String} resume           Mandatory resume of the Appointement.
- * @apiBody {Timestamp} date          Mandatory  date of the Appointement.
- * @apiBody {String} place            Optional place of the Appointement.
+ * @apiBody {String} resume           Obligatoire resume du Rdv
+ * @apiBody {Timestamp} date          Obligatoire  date du Rdv
+ * @apiBody {String} place            Optional Lieu du Rdv
  */
-AppointementRoute.post(
-  "/",
-  Interceptor,
-  async (req: Request, res: Response) => {
-    const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-
+AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => {
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+  if (utils.isFill(req.body.resume) && utils.isFill(req.body.date)) {
     // vérification du bon format de la date format DD/MM/YYYY HH:MM
-    if (regexDate(req.body.date) == false) {
+    if (!utils.regexDate(req.body.date)) {
       res.status(403).send({
         sucess: false,
         message:
@@ -139,7 +138,14 @@ AppointementRoute.post(
         });
       }
     }
+  } else {
+    res.status(403).send({
+      sucess: false,
+      message:
+        "Vous devez renseinger toutes les informations suivants : Résumé texte / Date ",
+    });
   }
+}
 );
 
 /**
@@ -189,18 +195,5 @@ AppointementRoute.delete(
     res.status(200).send(result);
   }
 );
-
-const regexDate = (date: string) => {
-  const regexDate = new RegExp(
-    /^([1-9]|([012][0-9])|(3[01]))-([0]{0,1}[1-9]|1[012])-\d\d\d\d [012]{0,1}[0-9]:[0-6][0-9]$/
-  );
-
-  const dateRegex = date.match(regexDate);
-  if (dateRegex) {
-    return false;
-  } else {
-    return true;
-  }
-};
 
 export = AppointementRoute;

@@ -116,7 +116,7 @@ OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
  * @api {post} organization/ Add new Organization
  * @apiGroup Organization
  * @apiName postOrganization
- * @apiDescription Ajoute une organisation
+ * @apiDescription Ajoute une organisation 
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  *
