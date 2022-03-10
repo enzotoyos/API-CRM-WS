@@ -5,6 +5,7 @@ import IOrganization from "../interface/IOrganization";
 import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
 import AdminController from "../controller/AdminController";
+import UtilsController from "../controller/UtilsController";
 import LoggerManager from "../../config/Logger";
 
 const OrganizationRoute = Router();
@@ -13,6 +14,7 @@ const organizationRef = db.collection("organizations");
 const adminRef = db.collection("admins");
 const tokenCtrl = new TokenController();
 const adminCtrl = new AdminController();
+const utils = new UtilsController();
 const Logger = LoggerManager(__filename);
 
 /**
@@ -21,6 +23,7 @@ const Logger = LoggerManager(__filename);
  * @apiName getAllOrganization
  * @apiDescription Récupère toutes les organisations
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
  *
  */
 OrganizationRoute.get("/", Interceptor, async (req: Request, res: Response) => {
@@ -65,8 +68,11 @@ OrganizationRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiQuery {String} id    Id of the Organization
  * @apiGroup Organization
  * @apiName getOrganizationById
- * @apiDescription Récupère une organisation par son Id
+ * @apiDescription Récupère une organisation via son id
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
+ * 
+ * @apiParam {String} id          Obligatoire l'id de l'organisation.
  *
  */
 OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
@@ -112,25 +118,25 @@ OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
  * @apiName postOrganization
  * @apiDescription Ajoute une organisation
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
  *
  * @apiBody {String} address          Mandatory address of the Organization.
- * @apiBody {String} name           Mandatory  name of the Organization.
- * @apiBody {Array} customers        Mandatory Array of Customers.
+ * @apiBody {String} name             Mandatory  name of the Organization.
+ * @apiBody {number} nbworkers        Optionnal Nombre d'utilisateur (0 par défaut)
  */
 OrganizationRoute.post(
   "/",
   Interceptor,
   async (req: Request, res: Response) => {
     const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-    const message = testValueInBody(req.body.address, req.body.name);
 
-    if (message === true) {
+    if (utils.isFill(req.body.address) && utils.isFill(req.body.name)) {
       try {
         // On crée une organisation
         const newOrga = await organizationRef.add({
           address: req.body.address,
           name: req.body.name,
-          NbEmployees: req.body.NbEmployees ? req.body.NbEmployees : "0",
+          NbEmployees: req.body.nbworkers ? req.body.nbworkers : "0",
           customers: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -159,7 +165,7 @@ OrganizationRoute.post(
       res.status(403).send({
         success: false,
         message: "Une erreur est survenue durant l'ajout d'une organisation.",
-        error: message,
+        error: "Il manque un des champs obligatoire addresse : " + req.body.address + " ou le nom : " + req.body.name,
       });
     }
   }
@@ -171,12 +177,12 @@ OrganizationRoute.post(
  * @apiName putOrganization
  * @apiDescription Modifie une organization
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
+ * 
+ * @apiParam {String} id          Obligatoire l'id de l'organisation concerné.
  *
- * @apiBody {String} address           Mandatory address of the Organization.
- * @apiBody {Array} customers          Mandatory  array of customers of the Organization.
- * @apiBody {String} name              Mandatory name of the Organization.
- * @apiBody {Number} nbworkers         Optional number of workers inside the Organization.
- * @apiBody {String} logo              Optional logo of the Organization.
+ * @apiSuccess {boolean}  success       vrai pour la réussite de la modification
+ * @apiSuccess {String}   message       message
  */
 OrganizationRoute.put(
   "/:id",
@@ -199,11 +205,16 @@ OrganizationRoute.put(
 );
 
 /**
- * @api {delete} organization/:id delete an Organization
+ * @api {delete} organization/:id Delete Organization
  * @apiGroup Organization
- * @apiName deleteOrganization
- * @apiDescription supprime une organisation
+ * @apiName DeleteOrganization
+ * @apiDescription Supprime une organisation
  * @apiPermission Token
+ * 
+ * @apiParam {String} id          Obligatoire l'id de l'organisation.
+ * 
+ * @apiSuccess {boolean}  success       vrai pour la réussite de la suppression
+ * @apiSuccess {String}   message       message
  */
 OrganizationRoute.delete(
   "/:id",
@@ -250,19 +261,5 @@ OrganizationRoute.delete(
     }
   }
 );
-
-const testValueInBody = (address: string, name: string) => {
-  switch (null) {
-    case address:
-      return "le champ address est manquant";
-      break;
-    case name:
-      return "le champ name est manquant";
-      break;
-    default:
-      return true;
-      break;
-  }
-};
 
 export = OrganizationRoute;

@@ -77,6 +77,7 @@ AdminRoute.post("/login", async (req: Request, res: Response) => {
  * @apiDescription Récupère un admin via son id
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
+ * 
  * @apiParam {String} id          Obligatoire l'id de l'admin.
  * 
  * @apiSuccess {boolean}  success       vrai pour la réussite de la récupération
@@ -91,7 +92,7 @@ AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
   if (!doc.exists) {
     res.status(403).send({
       success: false,
-      message: "Aucun utilisateur ne correspond à cet ID ",
+      message: "Aucun admin ne correspond à cet ID ",
     });
   } else {
     res.status(200).send({ sucess: true, message: 'La récupération des information de l\'admin a réussi.', record: doc.data() });
