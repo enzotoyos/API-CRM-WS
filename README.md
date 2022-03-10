@@ -1,6 +1,7 @@
 ## API CRM-WS
 
 [![Build API](https://github.com/enzotoyos/API-CRM-WS/actions/workflows/main.yml/badge.svg)](https://github.com/enzotoyos/API-CRM-WS/actions/workflows/main.yml)
+[![Deploy API](https://github.com/enzotoyos/API-CRM-WS/actions/workflows/main.yml/badge.svg?event=deployment)](https://github.com/enzotoyos/API-CRM-WS/actions/workflows/main.yml)
 
 ### Technologie
 
@@ -27,7 +28,6 @@
 
 > API_KEY :
 
-
 ### Installation
 
 - npm i
@@ -51,4 +51,7 @@ SECURE_KEY=
 # Configuration serveur SMTP
 EMAIL=
 EMAIL_PASSWORD=
+
+# Clé de déchiffrage du fichier de conf de Firebase
+KEY_ENCRYPT_FIREBASE=
 ```

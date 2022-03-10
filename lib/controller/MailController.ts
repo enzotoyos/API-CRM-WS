@@ -22,8 +22,7 @@ class MailController {
      * 
      * @param fullname string
      * @param email string
-     * @param token string
-     * @param login string
+     * @param link string
      */
     async sendInitPwd(fullname: string, email: string, link: string): Promise<boolean> {
         let result = false;
@@ -43,15 +42,17 @@ class MailController {
                 subject: 'Validation de l\'adresse mail pour l\'API CRM-WS.',
                 html: template
             }
-            transporterGmail.sendMail(mailOptionsOVH, (error: Error, info: SMTPTransport.SentMessageInfo) => {
-                console.log(error);
-                console.log(info);
+            transporterGmail.sendMail(mailOptionsOVH, (error: any, info: SMTPTransport.SentMessageInfo) => {
+                if (error) {
+                    Logger.log({ level: "error", message: error });
+                }
+                Logger.info(info);
             });
 
             result = true;
             return result;
         } catch (error) {
-            console.log(error);
+            Logger.log({ level: "error", message: error });
             return result;
         }
     }
