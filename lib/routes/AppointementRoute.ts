@@ -24,7 +24,8 @@ AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
   const result: IResult = {
     success: true,
     message: "La récupération des rendez-vous a réussi.",
-    record: [],
+    total: 0,
+    record: []
   };
 
   try {
@@ -32,8 +33,9 @@ AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
     snapshot.forEach((doc) => {
       result.record.push(doc.data());
     });
+    result.total = result.record.length;
     res.status(200).send(result);
-  } catch (error : any) {
+  } catch (error: any) {
     Logger.log({ level: "error", message: error });
     res.status(400).send({
       success: false,
@@ -128,7 +130,7 @@ AppointementRoute.post(
             message: "Rendez-vous Ajouté",
             record: appaointDoc.id,
           });
-      } catch (error : any) {
+      } catch (error: any) {
         Logger.log({ level: "error", message: error });
         res.status(400).send({
           success: false,
