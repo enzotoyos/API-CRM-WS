@@ -261,8 +261,8 @@ const deleteImage = async (imageLink: string, idCustomer: string) => {
   if (!userDoc.exists) {
     return false;
   } else {
-    let custoContent = userDoc.data();
-    let tImageLink: String[] = [];
+    const custoContent = userDoc.data();
+    const tImageLink: string[] = [];
     custoContent.imageLink.forEach((item: string) => {
       tImageLink.push(decodeURIComponent(item));
     });
