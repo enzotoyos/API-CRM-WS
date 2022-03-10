@@ -44,5 +44,5 @@ jobs:
           username: ${{ secrets.USERNAME }}
           port: ${{ secrets.PORT }}
           key: ${{ secrets.PRIV_KEY }}
-          source: "./apidoc/"
+          source: "./apidoc"
           target: "/var/www/apidoc"
