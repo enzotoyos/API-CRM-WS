@@ -27,7 +27,6 @@ const infoTransport = new transports.DailyRotateFile({
     zippedArchive: true,
     maxSize: '20m',
     maxFiles: '14d',
-    level: 'info',
     format: defaultFormat
 });
 const errorTransport = new transports.DailyRotateFile({

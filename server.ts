@@ -16,20 +16,23 @@ Firebase;
 
 import bodyParser from "body-parser";
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use(function (req: any, res, next) {
-  Logger.info(`${req.method}:${req.baseUrl}${req.path}`);
-  res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization "
-  );
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  next();
-});
+try {
+  app.use(bodyParser.json({ limit: '100mb' }));
+  app.use(bodyParser.urlencoded({ limit: '100mb' }));
+  app.use(bodyParser.urlencoded({ extended: true, limit: '100mb' }));
+  app.use(function (req: any, res, next) {
+    Logger.info(`${req.method}:${req.baseUrl}${req.path}`);
+    res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization "
+    );
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+    next();
+  });
+} catch (error) {
+  console.log(error);
+}
 
 // ------------------------ Récupération des Routes -------------------------
 import AdminRoute from "./lib/routes/AdminRoute";
@@ -43,8 +46,8 @@ import LogRouter from "./lib/routes/LogRouter";
 app.get("/", (req: Request, res: Response) => {
   res.send(
     "[" +
-      process.env.NODE_ENV +
-      "] - Welcome to CRM-WS API. You can find documentation to : <website>"
+    process.env.NODE_ENV +
+    "] - Welcome to CRM-WS API. You can find documentation to : <website>"
   );
 });
 // Route qui vérifie que l'appli est toujours connecté
@@ -63,9 +66,9 @@ const httpServer = http.createServer(app);
 httpServer.listen(process.env.PORT, () => {
   Logger.info(
     "INFO - CRM-WS [" +
-      process.env.NODE_ENV +
-      "] - API Started on port : " +
-      process.env.PORT
+    process.env.NODE_ENV +
+    "] - API Started on port : " +
+    process.env.PORT
   );
 });
 

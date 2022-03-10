@@ -5,9 +5,9 @@ import Interceptor from "../middleware/Interceptor";
 import MailController from "../controller/MailController";
 import admin from "firebase-admin";
 import TokenController from "../controller/TokenController";
-import { v4 as uuidv4 } from "uuid";
 import AdminController from "../controller/AdminController";
 import UtilsController from "../controller/UtilsController";
+import ImageController from "../controller/ImageController";
 import LoggerManager from "../../config/Logger";
 
 const CustomerRoute = Router();
@@ -18,6 +18,7 @@ const orgaRef = db.collection("organizations");
 const mailCtrl = new MailController();
 const tokenCtrl = new TokenController();
 const utils = new UtilsController();
+const imgCtrl = new ImageController();
 const adminCtrl = new AdminController();
 const Logger = LoggerManager(__filename);
 
@@ -189,138 +190,65 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
 });
 
 /**
- * @api {post} customer/ post Image
+ * @api {post} customer/:id/image Add Image to customer
  * @apiGroup Customer
- * @apiName postCustomer
+ * @apiName postImageCustomer
  * @apiDescription Ajouter une image pour un client
  * @apiPermission Token
- * @apiBody {String} idCustomer            ID du customer
- * @apiBody {String} image          Image en Base64
+ * @apiHeader {String} Authorization Token 
+ * 
+ * @apiParam {String} id          Obligatoire l'id du customer.
+ * @apiBody {String} image                 Image en Base64
  */
-CustomerRoute.post(
-  "/:id/image",
-  Interceptor,
-  async (req: Request, res: Response) => {
-    console.log(req.params.id);
-    try {
-      uploadImage(req.body.image, req.params.id).then(function (result) {
-        res.status(200).send({
-          sucess: true,
-          message: "Image uploaded",
-          Date: Date.now(),
-          imageUrl: result[0],
-        });
+CustomerRoute.post("/:id/image", Interceptor, async (req: Request, res: Response) => {
+  try {
+    imgCtrl.uploadImage(req.body.image, req.params.id, 'customersPhoto/').then(function (result) {
+      res.status(200).send({
+        sucess: true,
+        message: "Image uploaded",
+        Date: new Date().toLocaleString("en-GB", { timeZone: "Europe/Paris" }),
+        imageUrl: result[0],
       });
-    } catch (error: any) {
-      Logger.log({ level: "error", message: error });
-      res.status(400).send({
-        success: false,
-        message: "Une erreur est survenue durant upload.",
-        error: error,
-      });
-    }
-  }
-);
-
-CustomerRoute.delete(
-  "/:id/image",
-  Interceptor,
-  async (req: Request, res: Response) => {
-    try {
-      const imageResult = deleteImage(
-        String(req.query.imageLink),
-        req.params.id
-      );
-      if ((await imageResult) === false) {
-        res
-          .status(403)
-          .send({ success: false, message: "erreur lors de la suppression" });
-      } else {
-        res
-          .status(200)
-          .send({ success: true, message: "succès lors de la suppression" });
-      }
-    } catch (error: any) {
-      Logger.log({ level: "error", message: error });
-      res.status(400).send({
-        success: false,
-        message: "Une erreur est survenue durant la suppression.",
-        error: error,
-      });
-    }
-  }
-);
-
-const deleteImage = async (imageLink: string, idCustomer: string) => {
-  const userDoc = await db.collection("customers").doc(idCustomer).get();
-  if (!userDoc.exists) {
-    return false;
-  } else {
-    const custoContent = userDoc.data();
-    const tImageLink: string[] = [];
-    custoContent.imageLink.forEach((item: string) => {
-      tImageLink.push(decodeURIComponent(item));
     });
-    const index = tImageLink.indexOf(imageLink);
-
-    if (index > -1) {
-      custoContent.imageLink.splice(index, 1);
-    }
-    const value = imageLink.split(
-      "https://storage.googleapis.com/crm-ws.appspot.com/customersPhoto/"
-    );
-    const value2 = value[1].split("?");
-
-    db.collection("customers").doc(idCustomer).update(custoContent);
-    storageRef
-      .file("customersPhoto/" + value2[0])
-      .delete()
-      .then(() => {
-        console.log("Successfully deleted photo ");
-      })
-      .catch((err) => {
-        console.log("Failed to remove photo", err);
-        return false;
-      });
-    return true;
+  } catch (error: any) {
+    Logger.log({ level: "error", message: error });
+    res.status(400).send({
+      success: false,
+      message: "Une erreur est survenue durant upload.",
+      error: error,
+    });
   }
-};
+}
+);
 
-const uploadImage = (data: string, idClient: string) => {
-  return new Promise((resolve) => {
-    const buf = Buffer.from(data, "base64");
-    const file = storageRef.file(
-      "customersPhoto" + "/" + idClient + ";" + uuidv4() + ".png"
-    );
-
-    file.save(
-      buf,
-      {
-        contentType: "image/png",
-        metadata: { contentType: "image/png" },
-      },
-
-      (err) => {
-        if (err) {
-          throw err;
-        } else {
-          file
-            .getSignedUrl({
-              action: "read",
-              expires: "03-09-2491",
-            })
-            .then(async (signedUrls) => {
-              const customerDoc = db.collection("customers").doc(idClient);
-              await customerDoc.update({
-                imageLink: FieldValue.arrayUnion(signedUrls[0]),
-              });
-              resolve(signedUrls);
-            });
-        }
-      }
-    );
-  });
-};
+/**
+ * @api {delete} customer/:id/image Delete Image from customer
+ * @apiGroup Customer
+ * @apiName deleteImageCustomer
+ * @apiDescription Supprime une image d'un client
+ * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
+ * 
+ * @apiParam {String} id          Obligatoire l'id du customer.
+ */
+CustomerRoute.delete("/:id/image", Interceptor, async (req: Request, res: Response) => {
+  try {
+    const imageResult = imgCtrl.deleteImage(String(req.query.imageLink), req.params.id, 'customersPhoto/');
+    if ((await imageResult) === false) {
+      res.status(403).send({ success: false, message: "erreur lors de la suppression" });
+    } else {
+      res.status(200).send({ success: true, message: "L'image a bien été supprimé de l'utilisateur : " + req.params.id });
+    }
+  } catch (error: any) {
+    Logger.log({ level: "error", message: error });
+    res.status(400).send({
+      success: false,
+      message: "Une erreur est survenue durant la suppression.",
+      error: error,
+    });
+  }
+}
+);
 
 const getListImage = async (idCustomer: string) => {
   let imageLink = [];

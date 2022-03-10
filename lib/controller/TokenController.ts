@@ -1,5 +1,6 @@
 import { getFirestore } from "firebase-admin/firestore";
 import jwt from "jsonwebtoken";
+// import LoggerManager from "../../config/Logger";
 
 const secureKey =
     process.env.SECURE_KEY != undefined
@@ -8,6 +9,7 @@ const secureKey =
 
 const db = getFirestore();
 const adminRef = db.collection('admins');
+// const Logger = LoggerManager(__filename);
 
 class TokenController {
     /**
@@ -25,7 +27,7 @@ class TokenController {
             const dateExpire = new Date();
             //On Ajoute 10 minutes
             dateExpire.setMinutes(dateExpire.getMinutes() + 10);
-            
+
             //Création du Token
             const jwbToken: string = jwt.sign(
                 {
@@ -50,7 +52,7 @@ class TokenController {
             result.success = true;
             return result;
         } catch (error: any) {
-            console.log(error);
+            // Logger.log({ level: "error", message: error });
             result.success = false;
             result.message = "Echec de la connexion";
             result.error.push({
