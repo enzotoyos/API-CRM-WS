@@ -2,8 +2,6 @@ import { Router, Request, Response } from "express";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import IResult from "../interface/IResult";
 import Interceptor from "../middleware/Interceptor";
-import MailController from "../controller/MailController";
-import admin from "firebase-admin";
 import TokenController from "../controller/TokenController";
 import AdminController from "../controller/AdminController";
 import UtilsController from "../controller/UtilsController";
@@ -15,27 +13,12 @@ const db = getFirestore();
 const adminRef = db.collection("admins");
 const customerRef = db.collection("customers");
 const orgaRef = db.collection("organizations");
-const mailCtrl = new MailController();
 const tokenCtrl = new TokenController();
 const utils = new UtilsController();
 const imgCtrl = new ImageController();
 const adminCtrl = new AdminController();
 const Logger = LoggerManager(__filename);
 
-const storageRef = admin.storage().bucket(`crm-ws.appspot.com`);
-
-CustomerRoute.post(
-  "/mail",
-  Interceptor,
-  async (req: Request, res: Response) => {
-    mailCtrl.sendInitPwd("DEUPONT Jean", "gaetan.patruno@ynov.com", "monlink");
-    res.status(200).send({
-      success: true,
-      message: "Un mail de validation a été envoyé",
-      record: [],
-    });
-  }
-);
 
 /**
  * @api {get} customer/ Get All Customer
@@ -43,6 +26,9 @@ CustomerRoute.post(
  * @apiName getAllCustomer
  * @apiDescription Récupère tous les clients d'une organisation
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
+ * 
+ * @apiParam {String} id          Obligatoire l'id de l'organisation.
  */
 CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
   const result: IResult = {
@@ -52,11 +38,21 @@ CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
   };
 
   try {
-    const snapshot = await customerRef.get();
-    snapshot.forEach((doc) => {
-      result.record.push(doc.data());
-    });
-    res.status(200).send(result);
+    if (utils.isFill(req.params.id)) {
+      const doc = await orgaRef.doc(req.params.id).get();
+      if (!doc.exists) {
+        result.message = "Aucune organisation correspondante";
+      } else {
+        result.result = doc.data();
+      }
+      const snapshot = await customerRef.get();
+      snapshot.forEach((doc) => {
+        result.record.push(doc.data());
+      });
+      res.status(200).send(result);
+    } else {
+
+    }
   } catch (error: any) {
     Logger.log({ level: "error", message: error });
     res.status(400).send({
@@ -74,6 +70,7 @@ CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiName getCustomerById
  * @apiDescription Récupère un client par son Id
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
  *
  */
 CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
@@ -121,6 +118,7 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
  * @apiName postCustomer
  * @apiDescription Ajoute un client dans une organisation
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
  *
  * @apiBody {String} id             Mandatory of Organization
  * @apiBody {String} email          Mandatory Email of the User.
@@ -143,8 +141,7 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
           message: "Votre compte Admin n'existe pas.",
         });
       } else {
-        const isOrga = doc.data().organization.includes(req.body.id);
-        if (isOrga) {
+        if (adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, req.body.id)) {
           const newCusto = await customerRef.add({
             email: req.body.email,
             phone: req.body.phone,
@@ -229,11 +226,12 @@ CustomerRoute.post("/:id/image", Interceptor, async (req: Request, res: Response
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  * 
+ * @apiQuery {String} link   Image link to delete
  * @apiParam {String} id          Obligatoire l'id du customer.
  */
 CustomerRoute.delete("/:id/image", Interceptor, async (req: Request, res: Response) => {
   try {
-    const imageResult = imgCtrl.deleteImage(String(req.query.imageLink), req.params.id, 'customersPhoto/');
+    const imageResult = imgCtrl.deleteImage(String(req.query.link), req.params.id, 'customersPhoto/');
     if ((await imageResult) === false) {
       res.status(403).send({ success: false, message: "erreur lors de la suppression" });
     } else {

@@ -1,15 +1,10 @@
 import { Router, Request, Response } from "express";
-import IResult from "../interface/IResult";
 import Interceptor from "../middleware/Interceptor";
-import TokenController from "../controller/TokenController";
-import AdminController from "../controller/AdminController";
 import LoggerManager from "../../config/Logger";
 import * as path from 'path';
 import fs = require('fs');
 
 const LogRouter = Router();
-const tokenCtrl = new TokenController();
-const adminCtrl = new AdminController();
 const Logger = LoggerManager(__filename);
 
 /**
@@ -19,6 +14,7 @@ const Logger = LoggerManager(__filename);
  * @apiName getLog
  * @apiDescription Récupère le contenu d'un fichier de log
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
  *
  */
 LogRouter.get("/", Interceptor, async (req: Request, res: Response) => {
@@ -31,7 +27,7 @@ LogRouter.get("/", Interceptor, async (req: Request, res: Response) => {
     res.status(200).send((req.query.type === 'error') ? defaultError : defaultLog);
   } catch (error) {
     Logger.log({ level: "error", message: error });
-    res.status(500).send({success: false, message: 'Une erreur est survenue durant la récupération du fichier : ' + req.query.type});
+    res.status(500).send({ success: false, message: 'Une erreur est survenue durant la récupération du fichier : ' + req.query.type });
   }
 });
 

@@ -39,28 +39,28 @@ const errorTransport = new transports.DailyRotateFile({
     format: formatError
 });
 
-const LoggerManager = (moduleName: string) => createLogger({
-    defaultMeta: { component: path.basename(moduleName) },
-    transports: [
-        infoTransport,
-        errorTransport
-    ]
-});
-
 // const LoggerManager = (moduleName: string) => createLogger({
 //     defaultMeta: { component: path.basename(moduleName) },
 //     transports: [
-//         new transports.File({
-//             filename: './Log/default.log',
-//             level: 'info',
-//             format: defaultFormat
-//         }),
-//         new transports.File({
-//             filename: './Log/error.log',
-//             level: 'error',
-//             format: formatError
-//         })
+//         infoTransport,
+//         errorTransport
 //     ]
 // });
+
+const LoggerManager = (moduleName: string) => createLogger({
+    defaultMeta: { component: path.basename(moduleName) },
+    transports: [
+        new transports.File({
+            filename: './Log/default.log',
+            level: 'log',
+            format: defaultFormat
+        }),
+        new transports.File({
+            filename: './Log/error.log',
+            level: 'error',
+            format: formatError
+        })
+    ]
+});
 
 export = LoggerManager;
