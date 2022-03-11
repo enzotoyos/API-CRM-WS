@@ -177,7 +177,7 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  *
- * @apiQuery {String} id    Id of the Appointement
+ * @apiParams {String} id    Id of the Appointement
  * @apiBody {String} resume           Mandatory resume of the Appointement.
  * @apiBody {Timestamp} date          Mandatory  date of the Appointement.
  * @apiBody {String} place            Optional place of the Appointement.
