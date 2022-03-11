@@ -5,12 +5,14 @@ import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
 import UtilsController from "../controller/UtilsController";
 import LoggerManager from "../../config/Logger";
+import AdminController from "../controller/AdminController";
 
 const Logger = LoggerManager(__filename);
 const AppointementRoute = Router();
 const db = getFirestore();
 const tokenCtrl = new TokenController();
 const utils = new UtilsController();
+const adminCtrl = new AdminController();
 const appointementRef = db.collection("appointements");
 const custoRef = db.collection("customers");
 
@@ -97,10 +99,12 @@ AppointementRoute.get(
  * @apiBody {String} resume           Obligatoire resume du Rdv
  * @apiBody {Timestamp} date          Obligatoire  date du Rdv
  * @apiBody {String} place            Optional Lieu du Rdv
+ * @apiBody {String} id               Obligatoire id Client
  */
 AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-  if (utils.isFill(req.body.resume) && utils.isFill(req.body.date)) {
+  if (utils.isFill(req.body.resume) && utils.isFill(req.body.date) && utils.isFill(req.body.id)) {
+    if (await adminCtrl.checkAutorisationCustForAdmin(tokenDecod.uid, req.body.id)) {
     // vérification du bon format de la date format DD/MM/YYYY HH:MM
     if (!utils.regexDate(req.body.date)) {
       res.status(403).send({
@@ -138,11 +142,19 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
         });
       }
     }
+    }else{
+      res.status(403).send({
+        sucess: false,
+        message:
+          "Vous n'avez pas le droit d'accéder à cette ressource",
+      });
+    }
+
   } else {
     res.status(403).send({
       sucess: false,
       message:
-        "Vous devez renseinger toutes les informations suivants : Résumé texte / Date ",
+        "Vous devez renseigner toutes les informations suivants : Résumé texte / Date / ID client ",
     });
   }
 }
@@ -163,18 +175,25 @@ AppointementRoute.put(
   "/:id",
   Interceptor,
   async (req: Request, res: Response) => {
-    const appoinRef = appointementRef.doc(String(req.params.id));
+    const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+    if (utils.isFill(req.params.id)) {
+    if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, req.body.id)) {
+      const appoinRef = appointementRef.doc(String(req.params.id));
+      
+      
+      await appoinRef.update({
+        resume: req.body.resume,
+        date: req.body.date,
+        place: req.body.place,
+        createdAt: Date.now(),
+        createdBy: "",
+      });
+      
+      const result = { success: true, message: "Votre rendez-vous a bien été enregistré" };
+      res.status(200).send(result);
 
-    await appoinRef.update({
-      resume: req.body.resume,
-      date: req.body.date,
-      place: req.body.place,
-      createdAt: Date.now(),
-      createdBy: "",
-    });
+    }}
 
-    const result = { success: true, message: "putAppointement" };
-    res.status(200).send(result);
   }
 );
 

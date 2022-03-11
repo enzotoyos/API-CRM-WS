@@ -97,7 +97,7 @@ AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
       message: "Aucun admin ne correspond à cet ID ",
     });
   } else {
-    res.status(200).send({ sucess: true, message: 'La récupération des information de l\'admin a réussi.', record: doc.data() });
+    res.status(200).send({ sucess: true, message: 'La récupération des informations de l\'admin a réussi.', record: doc.data() });
   }
 });
 
@@ -253,11 +253,10 @@ AdminRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
 
   try {
     await admRef.update({
-      resume: req.body.resume,
-      date: req.body.date,
-      place: req.body.place,
-      createdAt: Date.now(),
-      createdBy: "",
+      name: req.body.name,
+      surname: req.body.surname,
+      updatedAt: Date.now(),
+
     });
 
     res.status(200).send({ success: true, message: "L'admin a bien été modifié" });
@@ -282,7 +281,7 @@ AdminRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
 AdminRoute.delete("/:id", Interceptor, async (req: Request, res: Response) => {
   const id: string = req.params.id;
 
-  if (req.params.id === null)
+  if (req.params.id)
     try {
       getAuth().deleteUser(id);
       await db.collection("admins").doc(id).delete();
