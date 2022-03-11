@@ -22,6 +22,7 @@ const custoRef = db.collection("customers");
  * @apiName getAllAppointement
  * @apiDescription Récupère tous les rendez-vous
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
  *
  */
 AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
@@ -52,41 +53,50 @@ AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
 
 /**
  * @api {get} appointement/:id Get Appointement by Id
- * @apiQuery {String} id    Id of the Appointement
  * @apiGroup Appointement
  * @apiName getAppointementById
  * @apiDescription Récupère un rendez-vous par son Id
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
  *
+ * @apiQuery {String} id    Id of the Appointement
  */
-AppointementRoute.get(
-  "/:id",
-  Interceptor,
-  async (req: Request, res: Response) => {
-    const result: IResult = {
-      success: true,
-      message: "La récupération du rendez-vous a réussi.",
-    };
+AppointementRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+  const result: IResult = {
+    success: true,
+    message: "La récupération du rendez-vous a réussi.",
+  };
 
-    try {
-      const appoinRef = appointementRef.doc(req.params.id);
-      const doc = await appoinRef.get();
-      if (!doc.exists) {
-        result.message = "Aucun rendez-vous correspondant";
-      } else {
+  if (utils.isFill(String(req.query.id))) {
+    if (await adminCtrl.checkAutorisationCustForAdmin(tokenDecod.uid, String(req.query.id))) {
+      try {
+        const doc = await appointementRef.doc().get();
         result.result = doc.data();
+        res.status(200).send(result);
+      } catch (error: any) {
+        Logger.log({ level: "error", message: error });
+        res.status(400).send({
+          success: false,
+          message: "Une erreur est survenue durant la récupération d'un rendez-vous.",
+          error: error,
+        });
       }
-      res.status(200).send(result);
-    } catch (error: any) {
-      Logger.log({ level: "error", message: error });
-      res.status(400).send({
-        success: false,
+    } else {
+      res.status(403).send({
+        sucess: false,
         message:
-          "Une erreur est survenue durant la récupération d'un rendez-vous.",
-        error: error,
+          "Vous n'avez pas le droit d'accéder à cette ressource",
       });
     }
+  } else {
+    res.status(403).send({
+      sucess: false,
+      message:
+        "Vous devez renseigner toutes les informations suivants : Résumé texte / Date / ID client ",
+    });
   }
+}
 );
 
 /**
@@ -95,6 +105,7 @@ AppointementRoute.get(
  * @apiName postAppointement
  * @apiDescription Ajoute un rendez-vous
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
  *
  * @apiBody {String} resume           Obligatoire resume du Rdv
  * @apiBody {Timestamp} date          Obligatoire  date du Rdv
@@ -105,44 +116,43 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   if (utils.isFill(req.body.resume) && utils.isFill(req.body.date) && utils.isFill(req.body.id)) {
     if (await adminCtrl.checkAutorisationCustForAdmin(tokenDecod.uid, req.body.id)) {
-    // vérification du bon format de la date format DD/MM/YYYY HH:MM
-    if (!utils.regexDate(req.body.date)) {
-      res.status(403).send({
-        sucess: false,
-        message:
-          "format de la date incorrect. Format accepté  DD/MM/YYYY HH:MM  ",
-      });
-    } else {
-      try {
-        const appaointDoc = await appointementRef.add({
-          resume: req.body.resume,
-          date: req.body.date,
-          place: req.body.place,
-          createdAt: Date.now(),
-          createdBy: tokenDecod.uid,
+      // vérification du bon format de la date format DD/MM/YYYY HH:MM
+      if (!utils.regexDate(req.body.date)) {
+        res.status(403).send({
+          sucess: false,
+          message: "format de la date incorrect. Format accepté  DD/MM/YYYY HH:MM  ",
         });
-
-        const docCusto = custoRef.doc(req.body.id);
-        await docCusto.update({
-          appointement: FieldValue.arrayUnion(appaointDoc.id),
-        });
-        res
-          .status(200)
-          .send({
-            success: true,
-            message: "Rendez-vous Ajouté",
-            record: appaointDoc.id,
+      } else {
+        try {
+          const appaointDoc = await appointementRef.add({
+            resume: req.body.resume,
+            date: req.body.date,
+            place: req.body.place,
+            createdAt: Date.now(),
+            createdBy: tokenDecod.uid,
           });
-      } catch (error: any) {
-        Logger.log({ level: "error", message: error });
-        res.status(400).send({
-          success: false,
-          message: "Une erreur est survenue durant l'ajout d'un rendez-vous.",
-          error: error,
-        });
+
+          const docCusto = custoRef.doc(req.body.id);
+          await docCusto.update({
+            appointement: FieldValue.arrayUnion(appaointDoc.id),
+          });
+          res
+            .status(200)
+            .send({
+              success: true,
+              message: "Rendez-vous Ajouté",
+              record: appaointDoc.id,
+            });
+        } catch (error: any) {
+          Logger.log({ level: "error", message: error });
+          res.status(400).send({
+            success: false,
+            message: "Une erreur est survenue durant l'ajout d'un rendez-vous.",
+            error: error,
+          });
+        }
       }
-    }
-    }else{
+    } else {
       res.status(403).send({
         sucess: false,
         message:
@@ -157,8 +167,7 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
         "Vous devez renseigner toutes les informations suivants : Résumé texte / Date / ID client ",
     });
   }
-}
-);
+});
 
 /**
  * @api {put} appointement/:id Modify an Appointement
@@ -166,35 +175,44 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
  * @apiName putAppointement
  * @apiDescription Modifie un rendez-vous
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
  *
+ * @apiQuery {String} id    Id of the Appointement
  * @apiBody {String} resume           Mandatory resume of the Appointement.
  * @apiBody {Timestamp} date          Mandatory  date of the Appointement.
  * @apiBody {String} place            Optional place of the Appointement.
  */
-AppointementRoute.put(
-  "/:id",
-  Interceptor,
-  async (req: Request, res: Response) => {
-    const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-    if (utils.isFill(req.params.id)) {
-    if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, req.body.id)) {
-      const appoinRef = appointementRef.doc(String(req.params.id));
-      
-      
+AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+
+  console.log("putAppointement " + req.params.id);
+
+  if (utils.isFill(String(req.query.id))) {
+    if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, String(req.query.id))) {
+      const appoinRef = appointementRef.doc(String(req.query.id));
+
       await appoinRef.update({
         resume: req.body.resume,
         date: req.body.date,
         place: req.body.place,
-        createdAt: Date.now(),
-        createdBy: "",
+        updatedAt: Date.now()
       });
-      
-      const result = { success: true, message: "Votre rendez-vous a bien été enregistré" };
+
+      const result = { success: true, message: "Le rendez-vous a bien été modifié." };
       res.status(200).send(result);
-
-    }}
-
+    } else {
+      res.status(403).send({
+        sucess: false,
+        message: "Vous n'avez pas le droit d'accéder à cette ressource",
+      });
+    }
+  } else {
+    res.status(403).send({
+      sucess: false,
+      message: "Vous devez renseigner l'id du Rdv a modifier.",
+    });
   }
+}
 );
 
 /**
@@ -203,16 +221,30 @@ AppointementRoute.put(
  * @apiName deleteAppointement
  * @apiDescription supprime un rendez-vous
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
+ * 
+ * @apiQuery {String} id    Id of the Appointement
  */
-AppointementRoute.delete(
-  "/:id",
-  Interceptor,
-  async (req: Request, res: Response) => {
-    await appointementRef.doc(String(req.params.id)).delete();
+AppointementRoute.delete("/:id", Interceptor, async (req: Request, res: Response) => {
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+  if (utils.isFill(req.params.id)) {
+    if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, req.body.id)) {
+      await appointementRef.doc(String(req.params.id)).delete();
 
-    const result = { success: true, message: "deleteAppointement" };
-    res.status(200).send(result);
+      res.status(200).send({ success: true, message: "La suppression du Rdv : " + req.params.id + " a réussi." });
+    } else {
+      res.status(403).send({
+        sucess: false,
+        message: "Vous n'avez pas le droit d'accéder à cette ressource",
+      });
+    }
+  } else {
+    res.status(403).send({
+      sucess: false,
+      message: "Vous devez renseigner l'id du Rdv a supprimer.",
+    });
   }
+}
 );
 
 export = AppointementRoute;
