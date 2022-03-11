@@ -82,6 +82,7 @@ OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
     result: undefined
   };
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+  
 
   try {
     if (await adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, req.params.id)) {
@@ -130,13 +131,14 @@ OrganizationRoute.post(
   async (req: Request, res: Response) => {
     const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
 
+      
     if (utils.isFill(req.body.address) && utils.isFill(req.body.name)) {
       try {
         // On crée une organisation
         const newOrga = await organizationRef.add({
           address: req.body.address,
           name: req.body.name,
-          NbEmployees: req.body.nbworkers ? req.body.nbworkers : "0",
+          nbworkers: req.body.nbworkers ? req.body.nbworkers : "0",
           customers: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -161,13 +163,14 @@ OrganizationRoute.post(
           error: error,
         });
       }
-    } else {
+    }else {
       res.status(403).send({
         success: false,
         message: "Une erreur est survenue durant l'ajout d'une organisation.",
         error: "Il manque un des champs obligatoire addresse : " + req.body.address + " ou le nom : " + req.body.name,
       });
     }
+
   }
 );
 
@@ -188,21 +191,36 @@ OrganizationRoute.put(
   "/:id",
   Interceptor,
   async (req: Request, res: Response) => {
-    const orgaRef = organizationRef.doc(String(req.params.id));
+    const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+  
+    if (utils.isFill(String(req.query.id))) {
+      if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, String(req.query.id))) {
 
-    await orgaRef.update({
-      address: req.body.address,
-      name: req.body.name,
-      NbEmployees: req.body.NbEmployees,
-      //logo à mettre
-      updatedAt: Date.now(),
-      createdAt: Date.now(),
-    });
-
-    const result = { success: true, message: "putOrganization" };
-    res.status(200).send(result);
+        const orgaRef = organizationRef.doc(String(req.query.id));
+  
+        await orgaRef.update({
+          resume: req.body.resume,
+          date: req.body.date,
+          place: req.body.place,
+          updatedAt: Date.now()
+        });
+  
+        const result = { success: true, message: "L'organisation' a bien été modifiée." };
+        res.status(200).send(result);
+      } else {
+        res.status(403).send({
+          sucess: false,
+          message: "Vous n'avez pas le droit d'accéder à cette ressource",
+        });
+      }
+    } else {
+      res.status(403).send({
+        sucess: false,
+        message: "Vous devez renseigner l'id de l'organisation à modifier.",
+      });
+    }
   }
-);
+  );
 
 /**
  * @api {delete} organization/:id Delete Organization
