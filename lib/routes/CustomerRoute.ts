@@ -6,6 +6,7 @@ import TokenController from "../controller/TokenController";
 import AdminController from "../controller/AdminController";
 import UtilsController from "../controller/UtilsController";
 import ImageController from "../controller/ImageController";
+import CustomerController from "../controller/CustomerController";
 import LoggerManager from "../../config/Logger";
 
 const CustomerRoute = Router();
@@ -17,6 +18,7 @@ const tokenCtrl = new TokenController();
 const utils = new UtilsController();
 const imgCtrl = new ImageController();
 const adminCtrl = new AdminController();
+const custoCtrl = new CustomerController();
 const Logger = LoggerManager(__filename);
 
 
@@ -24,42 +26,19 @@ const Logger = LoggerManager(__filename);
  * @api {get} customer/ Get All Customer
  * @apiGroup Customer
  * @apiName getAllCustomer
- * @apiDescription Récupère tous les clients d'une organisation
+ * @apiDescription Récupère tous les clients d'une organisation si un id d'organisation est renseigné sinon renvoie tous les clients de mon périmètre
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  * 
- * @apiParam {String} id          Obligatoire l'id de l'organisation.
+ * @apiParam {String} id          Optionnel l'id de l'organisation.
  */
 CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
-  const result: IResult = {
-    success: true,
-    message: "La récupération des clients a réussi.",
-    record: [],
-  };
-
-  try {
-    if (utils.isFill(req.params.id)) {
-      const doc = await orgaRef.doc(req.params.id).get();
-      if (!doc.exists) {
-        result.message = "Aucune organisation correspondante";
-      } else {
-        result.result = doc.data();
-      }
-      const snapshot = await customerRef.get();
-      snapshot.forEach((doc) => {
-        result.record.push(doc.data());
-      });
-      res.status(200).send(result);
-    } else {
-
-    }
-  } catch (error: any) {
-    Logger.log({ level: "error", message: error });
-    res.status(400).send({
-      success: false,
-      message: "Une erreur est survenue durant la récupération d'un client.",
-      error: error,
-    });
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+  const result = await custoCtrl.getAllCustomer(tokenDecod.uid, String(req.query.id));
+  if (result.success) {
+    res.status(200).send(result);
+  } else {
+    res.status(400).send(result);
   }
 });
 
@@ -141,7 +120,7 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
           message: "Votre compte Admin n'existe pas.",
         });
       } else {
-        if (adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, req.body.id)) {
+        if (await adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, req.body.id)) {
           const newCusto = await customerRef.add({
             email: req.body.email,
             phone: req.body.phone,
