@@ -86,7 +86,7 @@ class AdminController {
         for (let index in listIdOrga) {
             const docOrga = orgaRef.doc(String(listIdOrga[index]));
             const doc = await docOrga.get();
-            const listIdCusto: String[] = doc.data().customer;
+            const listIdCusto: string[] = doc.data().customer;
             for (let iterator in listIdCusto) {
                 const docCusto = custoRef.doc(String(listIdCusto[iterator]));
                 const docData = await docCusto.get();

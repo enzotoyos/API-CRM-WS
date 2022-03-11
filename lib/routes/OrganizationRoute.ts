@@ -192,16 +192,16 @@ OrganizationRoute.put(
   Interceptor,
   async (req: Request, res: Response) => {
     const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-  
-    if (utils.isFill(String(req.query.id))) {
-      if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, String(req.query.id))) {
-
-        const orgaRef = organizationRef.doc(String(req.query.id));
+    console.log(req.params.id);
+    if (utils.isFill(String(req.params.id))) {
+      if (await adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, String(req.params.id))) {
+        
+        const orgaRef = organizationRef.doc(String(req.params.id));
   
         await orgaRef.update({
-          resume: req.body.resume,
-          date: req.body.date,
-          place: req.body.place,
+          address: req.body.address,
+          name: req.body.name,
+          nbworkers: req.body.nbworkers,
           updatedAt: Date.now()
         });
   
@@ -238,7 +238,10 @@ OrganizationRoute.delete(
   "/:id",
   Interceptor,
   async (req: Request, res: Response) => {
-    if (req.params.id == null) {
+    const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+    console.log(req.params.id);
+    if (utils.isFill(req.params.id)) {
+      if (await adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, req.params.id)) {
       const result = {
         success: false,
         message: "Suppression impossible. le champ ID est obligatoire",
@@ -252,7 +255,7 @@ OrganizationRoute.delete(
       if (orgaList.empty) {
         res.status(403).send({
           sucess: false,
-          message: "aucun Admins correspond a cette organisation",
+          message: "aucun id correspond a cette organisation",
         });
         return;
       } else {
@@ -273,11 +276,11 @@ OrganizationRoute.delete(
         //supprime le json dans 'Organisation'
         await organizationRef.doc(String(req.params.id)).delete();
 
-        const result = { success: true, message: "deleteOrganization" };
+        const result = { success: true, message: "Organisation supprimée" };
         res.status(200).send(result);
       }
     }
-  }
+  }}
 );
 
 export = OrganizationRoute;
