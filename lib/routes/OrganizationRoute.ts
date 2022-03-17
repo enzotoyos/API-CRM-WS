@@ -126,8 +126,10 @@ OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
  * @apiBody {number} nbworkers        Optionnal Nombre d'utilisateur (0 par défaut)
  */
 OrganizationRoute.post("/", Interceptor, async (req: Request, res: Response) => {
-    const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-    if (utils.isFill(req.body.address) && utils.isFill(req.body.name)) {
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+  if (utils.isFill(req.body.address) && utils.isFill(req.body.name)) {
+    const regWorkers = (req.body.nbworkers) ? utils.regexAge(req.body.nbworkers) : true;
+    if (utils.regexString(req.body.name) && regWorkers) {
       try {
         // On crée une organisation
         const newOrga = await organizationRef.add({
@@ -160,13 +162,22 @@ OrganizationRoute.post("/", Interceptor, async (req: Request, res: Response) => 
       }
     } else {
       res.status(403).send({
-        success: false,
-        message: "Une erreur est survenue durant l'ajout d'une organisation.",
-        error: "Il manque un des champs obligatoire addresse : " + req.body.address + " ou le nom : " + req.body.name,
+        sucess: false,
+        message: "L'une des valeur suivante n'est pas au format attendu : " +
+          "Mail format : [a-z0-9]+@[a-z0-9]+\.[a-z]{2,4} "
+          + "Nom : [a-zA-Z] "
+          + "Si renseigné Nombre de travailleur : [0-9]"
       });
     }
-
+  } else {
+    res.status(403).send({
+      success: false,
+      message: "Une erreur est survenue durant l'ajout d'une organisation.",
+      error: "Il manque un des champs obligatoire addresse : " + req.body.address + " ou le nom : " + req.body.name,
+    });
   }
+
+}
 );
 
 /**

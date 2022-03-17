@@ -183,39 +183,48 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
     // isSpam = false we can create Admin
     if (!isSpam) {
       if (utils.isFill(req.body.email) && utils.isFill(req.body.name) && utils.isFill(req.body.surname)) {
-        const userRecord = await getAuth().createUser({
-          email: req.body.email,
-          emailVerified: false,
-          password: api_key,
-          displayName: req.body.name,
-          disabled: false,
-        });
-        const sLink = await getAuth().generateEmailVerificationLink(
-          req.body.email
-        );
-        mailCtrl.sendInitPwd(
-          req.body.name + " " + req.body.surname,
-          req.body.email,
-          sLink
-        );
+        if (utils.regexString(req.body.name) && utils.regexString(req.body.surname) && utils.regexMail(req.body.email)) {
+          const userRecord = await getAuth().createUser({
+            email: req.body.email,
+            emailVerified: false,
+            password: api_key,
+            displayName: req.body.name,
+            disabled: false,
+          });
+          const sLink = await getAuth().generateEmailVerificationLink(
+            req.body.email
+          );
+          mailCtrl.sendInitPwd(
+            req.body.name + " " + req.body.surname,
+            req.body.email,
+            sLink
+          );
 
-        adminRef.doc(userRecord.uid).set({
-          email: req.body.email,
-          api_key: api_key,
-          name: req.body.name,
-          surname: req.body.surname,
-          organization: [],
-          createdAt: Date.now(),
-          createdBy: tokenDecod.uid,
-        });
+          adminRef.doc(userRecord.uid).set({
+            email: req.body.email,
+            api_key: api_key,
+            name: req.body.name,
+            surname: req.body.surname,
+            organization: [],
+            createdAt: Date.now(),
+            createdBy: tokenDecod.uid,
+          });
 
-        res.status(200).send({
-          success: true,
-          message:
-            "L'administrateur a bien été ajouté. Un email de validation a été envoyé.",
-          record: userRecord.uid,
-          api_key: api_key,
-        });
+          res.status(200).send({
+            success: true,
+            message:
+              "L'administrateur a bien été ajouté. Un email de validation a été envoyé.",
+            record: userRecord.uid,
+            api_key: api_key,
+          });
+        } else {
+          res.status(403).send({
+            sucess: false,
+            message: "L'une des valeur suivante n'est pas au format attendu : " +
+              "Mail format : [a-z0-9]+@[a-z0-9]+\.[a-z]{2,4} "
+              + "Nom & Prénom : [a-zA-Z] "
+          });
+        }
       } else {
         res.status(400).send({
           success: false,
