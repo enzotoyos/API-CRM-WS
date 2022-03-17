@@ -22,7 +22,11 @@ const custoRef = db.collection("customers");
  * @apiName getAllAppointement
  * @apiDescription Récupère tous les rendez-vous
  * @apiPermission Token
- * @apiHeader {String} Authorization Token 
+ * @apiHeader {String} Authorization Token
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
+ * @apiSuccess {String}   message       Message.
+ * @apiSuccess {Object}   record        Les informations du rendez-vous. 
  *
  */
 AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
@@ -59,7 +63,10 @@ AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  *
- * @apiQuery {String} id    Id of the Appointement
+ * @apiQuery {String} id    Obligatoire l'id du rendez-vous.
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
+ * @apiSuccess {String}   message       Message.
  */
 AppointementRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
@@ -107,10 +114,14 @@ AppointementRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  *
- * @apiBody {String} resume           Obligatoire resume du Rdv
- * @apiBody {Timestamp} date          Obligatoire  date du Rdv
- * @apiBody {String} place            Optional Lieu du Rdv
- * @apiBody {String} id               Obligatoire id Client
+ * @apiBody {String} resume           Obligatoire résumé du Rdv.
+ * @apiBody {Timestamp} date          Obligatoire  date du Rdv.
+ * @apiBody {String} place            Facultatif lieu du Rdv.
+ * @apiBody {String} id               Obligatoire l'id Client
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
+ * @apiSuccess {String}   message       Message.
+ * @apiSuccess {Object}   record        L'id du rendez-vous. 
  */
 AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
@@ -178,9 +189,13 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
  * @apiHeader {String} Authorization Token 
  *
  * @apiParams {String} id    Id of the Appointement
- * @apiBody {String} resume           Mandatory resume of the Appointement.
- * @apiBody {Timestamp} date          Mandatory  date of the Appointement.
- * @apiBody {String} place            Optional place of the Appointement.
+ * @apiBody {String} resume           Obligatoire résumé du Rdv.
+ * @apiBody {Timestamp} date          Obligatoire  date du Rdv.
+ * @apiBody {String} place            Facultatif lieu du Rdv.
+ * @apiBody {String} id               Obligatoire l'id Client.
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
+ * @apiSuccess {String}   message       Message.
  */
 AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
@@ -221,7 +236,10 @@ AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) =
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  * 
- * @apiQuery {String} id    Id of the Appointement
+ * @apiBody {String} id     Obligatoire l'id Client.
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
+ * @apiSuccess {String}   message       Message.
  */
 AppointementRoute.delete("/:id", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);

@@ -32,7 +32,7 @@
 
 ### Fichier de configuration
 
-Propriétés a renseigner dans le fichier de configuration
+Propriétés à renseigner dans le fichier de configuration
 
 ```bash
 # Port de l'application (default: 3000)
