@@ -33,7 +33,9 @@ const storageRef = admin.storage().bucket(`crm-ws.appspot.com`);
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  * 
- * @apiParam {String} id          Optionnel l'id de l'organisation.
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
+ * @apiSuccess {String}   message       Message.
  */
 CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
