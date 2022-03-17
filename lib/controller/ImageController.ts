@@ -12,6 +12,25 @@ const storageRef = admin.storage().bucket(`crm-ws.appspot.com`);
 class ImageController {
 
     /**
+     * getImages
+     * 
+     * Récupère tous les liens d'un client
+     * 
+     * @param idCustomer string
+     * @returns String[]
+     */
+    async getImages(idCustomer: string): Promise<String[]> {
+        let imageLink = [];
+        const customerDOC = await customerRef.doc(idCustomer).get();
+        imageLink = customerDOC.data().imageLink;
+        if (imageLink.length === 0) {
+            return [];
+        } else {
+            return imageLink;
+        }
+    }
+
+    /**
      * deleteImage
      * 
      * @param imageLink string

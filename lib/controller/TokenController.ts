@@ -12,6 +12,7 @@ const adminRef = db.collection('admins');
 // const Logger = LoggerManager(__filename);
 
 class TokenController {
+    
     /**
      * @function createToken
      *
@@ -26,7 +27,7 @@ class TokenController {
             // Création de la date d'expiration
             const dateExpire = new Date();
             //On Ajoute 10 minutes
-            dateExpire.setMinutes(dateExpire.getMinutes() + 10);
+            dateExpire.setMinutes(dateExpire.getMinutes() + 110);
 
             //Création du Token
             const jwbToken: string = jwt.sign(

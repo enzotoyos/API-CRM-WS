@@ -26,7 +26,6 @@ class MailController {
      */
     async sendInitPwd(fullname: string, email: string, link: string): Promise<boolean> {
         let result = false;
-
         try {
             const pathToTemplate = path.resolve('./') + path.join('/', 'templates', 'mail', 'verifEmail.html');
 
@@ -35,6 +34,9 @@ class MailController {
             // Lien de validation du bouton et lien
             template = template.replace('%LINK%', link);
             template = template.replace('%LINK%', link);
+            template = template.replace('%LINKDOC%', process.env.APIDOC);
+            template = template.replace('%LINKDOC%', process.env.APIDOC);
+
 
             const mailOptionsOVH = {
                 from: process.env.EMAIL,

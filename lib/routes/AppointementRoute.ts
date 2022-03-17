@@ -185,8 +185,6 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
 AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
 
-  console.log("putAppointement " + req.params.id);
-
   if (utils.isFill(String(req.query.id))) {
     if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, String(req.query.id))) {
       const appoinRef = appointementRef.doc(String(req.query.id));

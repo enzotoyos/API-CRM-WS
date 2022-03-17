@@ -2,10 +2,7 @@ import { Router, Request, Response } from "express";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import IResult from "../interface/IResult";
 import Interceptor from "../middleware/Interceptor";
-import MailController from "../controller/MailController";
-import admin from "firebase-admin";
 import TokenController from "../controller/TokenController";
-import { v4 as uuidv4 } from "uuid";
 import AdminController from "../controller/AdminController";
 import UtilsController from "../controller/UtilsController";
 import ImageController from "../controller/ImageController";
@@ -14,16 +11,14 @@ import LoggerManager from "../../config/Logger";
 
 const CustomerRoute = Router();
 const db = getFirestore();
-const adminRef = db.collection("admins");
 const customerRef = db.collection("customers");
 const orgaRef = db.collection("organizations");
-const mailCtrl = new MailController();
+const utils = new UtilsController();
 const tokenCtrl = new TokenController();
+const imgCtrl = new ImageController();
 const adminCtrl = new AdminController();
 const custoCtrl = new CustomerController();
 const Logger = LoggerManager(__filename);
-
-const storageRef = admin.storage().bucket(`crm-ws.appspot.com`);
 
 /**
  * @api {get} customer/ Get All Customer
@@ -52,6 +47,7 @@ CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiName getCustomerById
  * @apiDescription Récupère un client par son Id
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
  *
  */
 CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
@@ -62,21 +58,12 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
   };
 
   try {
-    if (
-      await adminCtrl.checkAutorisationCustForAdmin(
-        tokenDecod.uid,
-        req.params.id
-      )
-    ) {
-      const custoRef = customerRef.doc(req.params.id);
-      const doc = await custoRef.get();
-      if (!doc.exists) {
-        result.message = "Aucun client correspondant";
-      } else {
-        result.result = doc.data();
-        result.result.imageLink = await getListImage(req.params.id);
-        res.status(200).send(result);
-      }
+    if (await adminCtrl.checkAutorisationCustForAdmin(tokenDecod.uid, req.params.id)) {
+      const custoRes = customerRef.doc(req.params.id);
+      const doc = await custoRes.get();
+      result.result = doc.data();
+      result.result.imageLink = doc.data().imageLink;
+      res.status(200).send(result);
     } else {
       res.status(401).send({
         success: false,
@@ -99,6 +86,7 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
  * @apiName postCustomer
  * @apiDescription Ajoute un client dans une organisation
  * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
  *
  * @apiBody {String} id             Mandatory of Organization
  * @apiBody {String} email          Mandatory Email of the User.
@@ -109,239 +97,159 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
  * @apiBody {Number} Age            Optionnal age.
  */
 CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
-  const message = testValueInBody(
-    req.body.email,
-    req.body.phone,
-    req.body.name,
-    req.body.surname
-  );
-
-  if (message === true) {
+  if (utils.isFill(req.body.email) && utils.isFill(req.body.phone) && utils.isFill(req.body.surname) && utils.isFill(req.body.email)) {
     try {
       const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-      const userDoc = adminRef.doc(tokenDecod.uid);
-
-      const doc = await userDoc.get();
-      if (!doc.exists) {
-        res.status(500).send({
-          success: false,
-          message: "Votre compte Admin n'existe pas.",
+      if (adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, req.body.id)) {
+        const newCusto = await customerRef.add({
+          email: req.body.email,
+          phone: req.body.phone,
+          name: req.body.name,
+          surname: req.body.surname,
+          imageLink: [],
+          age: (req.body.age) ? req.body.age : "",
+          appointement: [],
+          createdAt: Date.now(),
+          createdBy: tokenDecod.uid,
+        });
+        const docOrga = orgaRef.doc(req.body.id);
+        await docOrga.update({
+          customer: FieldValue.arrayUnion(newCusto.id),
+        });
+        res.status(200).send({
+          success: true,
+          message: "Le client a été ajouté dans l'organisation",
+          record: newCusto.id,
         });
       } else {
-        
-        
-        if (await adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, req.body.id)) {
-          const newCusto = await customerRef.add({
-            email: req.body.email,
-            phone: req.body.phone,
-            name: req.body.name,
-            surname: req.body.surname,
-            imageLink: [],
-            age: req.body.age,
-            appointement: [],
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-            createdBy: tokenDecod.uid,
-          });
-          const docOrga = orgaRef.doc(req.body.id);
-          await docOrga.update({
-            customer: FieldValue.arrayUnion(newCusto.id),
-          });
-          res.status(200).send({
-            success: true,
-            message: "Le client a été ajouté dans l'organisation",
-            record: newCusto.id,
-          });
-        } else {
-          res.status(401).send({
-            success: false,
-            message: "Votre n'avez pas accès a cette organisation.",
-          });
-        }
+        res.status(401).send({
+          success: false,
+          message: "Votre n'avez pas accès a cette organisation.",
+        });
       }
     } catch (error: any) {
+      console.log(error);
       Logger.log({ level: "error", message: error });
       res.status(400).send({
         success: false,
-        message: "Une erreur est survenue durant upload.",
+        message: "Une erreur est survenue durant la création de l'utilisateur.",
         error: error,
       });
     }
   } else {
     res.status(403).send({
       success: false,
-      error: message,
+      error: "Vous devez renseinger tous les champs suivants : Nom / Prénom / Mail / Téléphone",
+    });
+  }
+});
+
+/**
+ * @api {delete} customer/:id Delete Customer
+ * @apiGroup Customer
+ * @apiName DeleteCustomer
+ * @apiDescription Supprime un client et tous les Rdv qui lui sont rattachés
+ * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
+ * 
+ * @apiParam {String} id          Obligatoire l'id du client.
+ * 
+ * @apiSuccess {boolean}  success       vrai pour la réussite de la suppression
+ * @apiSuccess {String}   message       message
+ */
+CustomerRoute.delete("/:id", Interceptor, async (req: Request, res: Response) => {
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+
+  if (utils.isFill(req.params.id)) {
+    if (await adminCtrl.checkAutorisationCustForAdmin(tokenDecod.uid, req.params.id)) {
+      const isDeleted = await custoCtrl.deleteCusto(req.params.id);
+      if (isDeleted) {
+        return res.status(200).send({
+          sucess: true,
+          message: "Le client a bien été supprimé",
+        });
+      } else {
+        return res.status(500).send({
+          sucess: false,
+          message: "Une erreur est survenue durant la suppression du client",
+        });
+      }
+    } else {
+      res.status(403).send({
+        sucess: false,
+        message: "Vous n'avez pas le droit d'accéder à cette ressource",
+      });
+    }
+  } else {
+    res.status(403).send({
+      success: false,
+      message: "Suppression impossible. le champ ID du client est obligatoire",
     });
   }
 });
 
 /**
  * @api {post} customer/ post Image
+ * @api {post} customer/:id/image Add Image to customer
  * @apiGroup Customer
  * @apiName postCustomer
+ * @apiName postImageCustomer
  * @apiDescription Ajouter une image pour un client
  * @apiPermission Token
  * @apiBody {String} idCustomer            ID du customer
  * @apiBody {String} image          Image en Base64
+ * @apiHeader {String} Authorization Token 
+ * 
+ * @apiParam {String} id          Obligatoire l'id du customer.
+ * @apiBody {String} image                 Image en Base64
  */
-CustomerRoute.post(
-  "/:id/image",
-  Interceptor,
-  async (req: Request, res: Response) => {
-    console.log(req.params.id);
-    try {
-      uploadImage(req.body.image, req.params.id).then(function (result) {
-        res.status(200).send({
-          sucess: true,
-          message: "Image uploaded",
-          Date: Date.now(),
-          imageUrl: result[0],
-        });
+CustomerRoute.post("/:id/image", Interceptor, async (req: Request, res: Response) => {
+  try {
+    imgCtrl.uploadImage(req.body.image, req.params.id, 'customersPhoto/').then(function (result) {
+      res.status(200).send({
+        sucess: true,
+        message: "Image uploaded",
+        Date: new Date().toLocaleString("en-GB", { timeZone: "Europe/Paris" }),
+        imageUrl: result[0],
       });
-    } catch (error: any) {
-      Logger.log({ level: "error", message: error });
-      res.status(400).send({
-        success: false,
-        message: "Une erreur est survenue durant upload.",
-        error: error,
-      });
-    }
-  }
-);
-
-CustomerRoute.delete(
-  "/:id/image",
-  Interceptor,
-  async (req: Request, res: Response) => {
-    try {
-      const imageResult = deleteImage(
-        String(req.query.imageLink),
-        req.params.id
-      );
-      if ((await imageResult) === false) {
-        res
-          .status(403)
-          .send({ success: false, message: "erreur lors de la suppression" });
-      } else {
-        res
-          .status(200)
-          .send({ success: true, message: "succès lors de la suppression" });
-      }
-    } catch (error: any) {
-      Logger.log({ level: "error", message: error });
-      res.status(400).send({
-        success: false,
-        message: "Une erreur est survenue durant la suppression.",
-        error: error,
-      });
-    }
-  }
-);
-
-const deleteImage = async (imageLink: string, idCustomer: string) => {
-  const userDoc = await db.collection("customers").doc(idCustomer).get();
-  if (!userDoc.exists) {
-    return false;
-  } else {
-    const custoContent = userDoc.data();
-    const tImageLink: string[] = [];
-    custoContent.imageLink.forEach((item: string) => {
-      tImageLink.push(decodeURIComponent(item));
     });
-    const index = tImageLink.indexOf(imageLink);
-
-    if (index > -1) {
-      custoContent.imageLink.splice(index, 1);
-    }
-    const value = imageLink.split(
-      "https://storage.googleapis.com/crm-ws.appspot.com/customersPhoto/"
-    );
-    const value2 = value[1].split("?");
-
-    db.collection("customers").doc(idCustomer).update(custoContent);
-    storageRef
-      .file("customersPhoto/" + value2[0])
-      .delete()
-      .then(() => {
-        console.log("Successfully deleted photo ");
-      })
-      .catch((err) => {
-        console.log("Failed to remove photo", err);
-        return false;
-      });
-    return true;
+  } catch (error: any) {
+    Logger.log({ level: "error", message: error });
+    res.status(400).send({
+      success: false,
+      message: "Une erreur est survenue durant upload.",
+      error: error,
+    });
   }
-};
+}
+);
 
-const uploadImage = (data: string, idClient: string) => {
-  return new Promise((resolve) => {
-    const buf = Buffer.from(data, "base64");
-    const file = storageRef.file(
-      "customersPhoto" + "/" + idClient + ";" + uuidv4() + ".png"
-    );
-
-    file.save(
-      buf,
-      {
-        contentType: "image/png",
-        metadata: { contentType: "image/png" },
-      },
-
-      (err) => {
-        if (err) {
-          throw err;
-        } else {
-          file
-            .getSignedUrl({
-              action: "read",
-              expires: "03-09-2491",
-            })
-            .then(async (signedUrls) => {
-              const customerDoc = db.collection("customers").doc(idClient);
-              await customerDoc.update({
-                imageLink: FieldValue.arrayUnion(signedUrls[0]),
-              });
-              resolve(signedUrls);
-            });
-        }
-      }
-    );
-  });
-};
-
-const getListImage = async (idCustomer: string) => {
-  let imageLink = [];
-  const customerDOC = await db.collection("customers").doc(idCustomer).get();
-  if (!customerDOC.exists) {
-    console.log("erreur: document avec cet ID introuvable!");
-    return false;
-  } else {
-    imageLink = customerDOC.data().imageLink;
-    if (imageLink.length === 0) {
-      return [];
+/**
+ * @api {delete} customer/:id/image Delete Image from customer
+ * @apiGroup Customer
+ * @apiName deleteImageCustomer
+ * @apiDescription Supprime une image d'un client
+ * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
+ * 
+ * @apiParam {String} id          Obligatoire l'id du customer.
+ */
+CustomerRoute.delete("/:id/image", Interceptor, async (req: Request, res: Response) => {
+  try {
+    const imageResult = imgCtrl.deleteImage(String(req.query.imageLink), req.params.id, 'customersPhoto/');
+    if ((await imageResult) === false) {
+      res.status(403).send({ success: false, message: "erreur lors de la suppression" });
     } else {
-      return imageLink;
+      res.status(200).send({ success: true, message: "L'image a bien été supprimé de l'utilisateur : " + req.params.id });
     }
+  } catch (error) {
+    Logger.log({ level: "error", message: error });
+    res.status(400).send({
+      success: false,
+      message: "Une erreur est survenue durant la suppression.",
+      error: error,
+    });
   }
-};
-
-const testValueInBody = (
-  email: string,
-  phone: number,
-  name: string,
-  surname: string
-) => {
-  if (email === null) {
-    return "le champ email est manquant";
-  } else if (phone === null) {
-    return "le champ phone est manquant";
-  } else if (!name) {
-    return "le champ name est manquant";
-  } else if (!surname) {
-    return "le champ surname est manquant";
-  } else {
-    return true;
-  }
-};
+});
 
 export = CustomerRoute;

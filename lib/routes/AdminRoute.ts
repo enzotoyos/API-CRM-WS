@@ -73,23 +73,21 @@ AdminRoute.post("/login", async (req: Request, res: Response) => {
 });
 
 /**
- * @api {get} admin/:id Get Admin By Id
+ * @api {get} admin/info Get Admin Info
  * @apiGroup AdminGroup
- * @apiName getAdminById
- * @apiDescription Récupère un admin via son id
+ * @apiName getAdminInfo
+ * @apiDescription Récupère les informations d'un admin via le token
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
- * 
- * @apiParam {String} id          Obligatoire l'id de l'admin.
  * 
  * @apiSuccess {boolean}  success       vrai pour la réussite de la récupération
  * @apiSuccess {String}   message       message
  * @apiSuccess {Object}   record        les informations de l'admin
  * 
  */
-AdminRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
-  const id: string = req.params.id;
-  const userDoc = adminRef.doc(id);
+AdminRoute.get("/info", Interceptor, async (req: Request, res: Response) => {
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+  const userDoc = adminRef.doc(tokenDecod.uid);
   const doc = await userDoc.get();
   if (!doc.exists) {
     res.status(403).send({

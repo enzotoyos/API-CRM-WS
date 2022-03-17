@@ -1,4 +1,4 @@
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import IResult from "../interface/IResult";
 import AdminController from "../controller/AdminController";
 import UtilsController from "../controller/UtilsController";
@@ -7,12 +7,42 @@ import LoggerManager from "../../config/Logger";
 const db = getFirestore();
 const custoRef = db.collection("customers");
 const orgaRef = db.collection("organizations");
+const rdvRef = db.collection("appointements");
 const adminRef = db.collection("admins");
 const utils = new UtilsController();
 const adminCtrl = new AdminController();
 const Logger = LoggerManager(__filename);
 
 class CustomerController {
+
+    async deleteCusto(idCusto: string): Promise<boolean> {
+        try {
+            let idOrga = "";
+            const snapshot = await orgaRef.get();
+            snapshot.forEach((doc) => {
+                if (doc.data().customer.includes(idCusto)) {
+                    idOrga = doc.id;
+                }
+            });
+
+            const custoData = await custoRef.doc(idCusto).get();
+            const listIdRdv: string[] = custoData.data().appointement;
+            listIdRdv.forEach(idRdv => {
+                rdvRef.doc(idRdv).delete();
+            });
+
+            // Suppression client
+            await custoRef.doc(idCusto).delete();
+
+            // Supprimer l'id client dans le tableau de l'organisation
+            await orgaRef.doc(idOrga).update({ customer: FieldValue.arrayRemove(idCusto) });
+
+            return true;
+        } catch (error) {
+            Logger.log({ level: "error", message: error });
+            return false;
+        }
+    }
 
     async getAllCustomer(idAdmin: string, idOrga?: string): Promise<IResult> {
         const result: IResult = {

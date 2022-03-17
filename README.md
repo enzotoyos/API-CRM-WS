@@ -23,7 +23,7 @@
 ### Admin par défaut
 
 > EMAIL : admin.default@crm.ynov
-> API_KEY :
+> API_KEY : wNSm5i8MCU3shqKtgeSE
 
 ### Installation
 
