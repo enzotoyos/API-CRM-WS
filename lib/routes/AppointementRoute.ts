@@ -104,8 +104,7 @@ AppointementRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
         "Vous devez renseigner toutes les informations suivants : Résumé texte / Date / ID client ",
     });
   }
-}
-);
+});
 
 /**
  * @api {post} appointement/ Add new Appointement
@@ -128,13 +127,7 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   if (utils.isFill(req.body.resume) && utils.isFill(req.body.date) && utils.isFill(req.body.id)) {
     if (await adminCtrl.checkAutorisationCustForAdmin(tokenDecod.uid, req.body.id)) {
-      // vérification du bon format de la date format DD/MM/YYYY HH:MM
-      if (!utils.regexDate(req.body.date)) {
-        res.status(403).send({
-          sucess: false,
-          message: "format de la date incorrect. Format accepté  DD/MM/YYYY HH:MM  ",
-        });
-      } else {
+      if (utils.regexDate(req.body.date)) {
         try {
           const appaointDoc = await appointementRef.add({
             resume: req.body.resume,
@@ -148,13 +141,11 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
           await docCusto.update({
             appointement: FieldValue.arrayUnion(appaointDoc.id),
           });
-          res
-            .status(200)
-            .send({
-              success: true,
-              message: "Rendez-vous Ajouté",
-              record: appaointDoc.id,
-            });
+          res.status(200).send({
+            success: true,
+            message: "Rendez-vous Ajouté",
+            record: appaointDoc.id,
+          });
         } catch (error: any) {
           Logger.log({ level: "error", message: error });
           res.status(400).send({
@@ -163,6 +154,11 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
             error: error,
           });
         }
+      } else {
+        res.status(403).send({
+          sucess: false,
+          message: "format de la date incorrect. Format attendu : DD/MM/YYYY HH:MM  ",
+        });
       }
     } else {
       res.status(403).send({
@@ -171,7 +167,6 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
           "Vous n'avez pas le droit d'accéder à cette ressource",
       });
     }
-
   } else {
     res.status(403).send({
       sucess: false,
@@ -203,17 +198,24 @@ AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) =
 
   if (utils.isFill(String(req.query.id))) {
     if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, String(req.query.id))) {
-      const appoinRef = appointementRef.doc(String(req.query.id));
+      if (utils.regexDate(req.body.date)) {
+        const appoinRef = appointementRef.doc(String(req.query.id));
 
-      await appoinRef.update({
-        resume: req.body.resume,
-        date: req.body.date,
-        place: req.body.place,
-        updatedAt: Date.now()
-      });
+        await appoinRef.update({
+          resume: req.body.resume,
+          date: req.body.date,
+          place: req.body.place,
+          updatedAt: Date.now()
+        });
 
-      const result = { success: true, message: "Le rendez-vous a bien été modifié." };
-      res.status(200).send(result);
+        const result = { success: true, message: "Le rendez-vous a bien été modifié." };
+        res.status(200).send(result);
+      } else {
+        res.status(403).send({
+          sucess: false,
+          message: "format de la date incorrect. Format attendu : DD/MM/YYYY HH:MM  ",
+        });
+      }
     } else {
       res.status(403).send({
         sucess: false,
@@ -226,8 +228,7 @@ AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) =
       message: "Vous devez renseigner l'id du Rdv a modifier.",
     });
   }
-}
-);
+});
 
 /**
  * @api {delete} appointement/:id delete an Appointement
@@ -237,7 +238,7 @@ AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) =
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  * 
- * @apiBody {String} id     Obligatoire l'id Client.
+ * @apiBody {String} id     Obligatoire l'id du Rdv a supprimer.
  * 
  * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
  * @apiSuccess {String}   message       Message.
@@ -247,7 +248,14 @@ AppointementRoute.delete("/:id", Interceptor, async (req: Request, res: Response
   if (utils.isFill(req.params.id)) {
     if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, req.body.id)) {
       await appointementRef.doc(String(req.params.id)).delete();
-
+      let idCusto = "";
+      const snapshot = await custoRef.get();
+      snapshot.forEach((doc) => {
+        if (doc.data().customer.includes(req.params.id)) {
+          idCusto = doc.id;
+        }
+      });
+      await custoRef.doc(idCusto).update({ organization: FieldValue.arrayRemove(req.params.id) });
       res.status(200).send({ success: true, message: "La suppression du Rdv : " + req.params.id + " a réussi." });
     } else {
       res.status(403).send({
@@ -261,7 +269,6 @@ AppointementRoute.delete("/:id", Interceptor, async (req: Request, res: Response
       message: "Vous devez renseigner l'id du Rdv a supprimer.",
     });
   }
-}
-);
+});
 
 export = AppointementRoute;

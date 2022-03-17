@@ -108,48 +108,115 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
  */
 CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
   if (utils.isFill(req.body.email) && utils.isFill(req.body.phone) && utils.isFill(req.body.surname) && utils.isFill(req.body.email)) {
-    try {
-      const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
-      if (adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, req.body.id)) {
-        const newCusto = await customerRef.add({
-          email: req.body.email,
-          phone: req.body.phone,
-          name: req.body.name,
-          surname: req.body.surname,
-          imageLink: [],
-          age: (req.body.age) ? req.body.age : "",
-          appointement: [],
-          createdAt: Date.now(),
-          createdBy: tokenDecod.uid,
-        });
-        const docOrga = orgaRef.doc(req.body.id);
-        await docOrga.update({
-          customer: FieldValue.arrayUnion(newCusto.id),
-        });
-        res.status(200).send({
-          success: true,
-          message: "Le client a été ajouté dans l'organisation",
-          record: newCusto.id,
-        });
-      } else {
-        res.status(401).send({
+    const regAge = (req.body.age) ? utils.regexAge(req.body.age) : true;
+    if (utils.regexMail(req.body.email) && utils.regexString(req.body.name) && utils.regexString(req.body.surname) && regAge && utils.regexPhone(req.body.phone)) {
+      try {
+        const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+        if (adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, req.body.id)) {
+          const newCusto = await customerRef.add({
+            email: req.body.email,
+            phone: req.body.phone,
+            name: req.body.name,
+            surname: req.body.surname,
+            imageLink: [],
+            age: (req.body.age) ? req.body.age : "",
+            appointement: [],
+            createdAt: Date.now(),
+            createdBy: tokenDecod.uid,
+          });
+          const docOrga = orgaRef.doc(req.body.id);
+          await docOrga.update({
+            customer: FieldValue.arrayUnion(newCusto.id),
+          });
+          res.status(200).send({
+            success: true,
+            message: "Le client a été ajouté dans l'organisation",
+            record: newCusto.id,
+          });
+        } else {
+          res.status(401).send({
+            success: false,
+            message: "Votre n'avez pas accès a cette organisation.",
+          });
+        }
+      } catch (error: any) {
+        console.log(error);
+        Logger.log({ level: "error", message: error });
+        res.status(400).send({
           success: false,
-          message: "Votre n'avez pas accès a cette organisation.",
+          message: "Une erreur est survenue durant la création de l'utilisateur.",
+          error: error,
         });
       }
-    } catch (error: any) {
-      console.log(error);
-      Logger.log({ level: "error", message: error });
-      res.status(400).send({
-        success: false,
-        message: "Une erreur est survenue durant la création de l'utilisateur.",
-        error: error,
+    } else {
+      res.status(403).send({
+        sucess: false,
+        message: "L'une des valeur suivante n'est pas au format attendu : " +
+          "Mail format : [a-z0-9]+@[a-z0-9]+\.[a-z]{2,4} "
+          + "Nom & Prénom : [a-zA-Z] "
+          + "Téléphone : +33 X XX XX XX XX XX || +33XXXXXXXXX || 0XXXXXXXX "
+          + "Si renseigné Age : [0-9]{2,3} < 120 "
       });
     }
   } else {
     res.status(403).send({
       success: false,
-      error: "Vous devez renseinger tous les champs suivants : Nom / Prénom / Mail / Téléphone",
+      error: "Vous devez renseinger tous les champs suivants : Nom / Prénom / Mail format : [a-z0-9]+@[a-z0-9]+\.[a-z]{2,4} / Téléphone",
+    });
+  }
+});
+
+/**
+ * @api {put} customer/:id Modify an Customer
+ * @apiGroup Customer
+ * @apiName putCustomer
+ * @apiDescription Modifie les données d'un client
+ * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
+ *
+ * @apiParams {String} id    Id du client a modifier
+ * 
+ * @apiBody {String} email Email du client a modifier 
+ * @apiBody {String} name Nom du client a modifier
+ * @apiBody {number} age Age du client a modifier
+ * @apiBody {String} phone Téléphone du client a modifier
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
+ * @apiSuccess {String}   message       Message.
+ */
+CustomerRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
+  const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
+
+  if (utils.isFill(String(req.query.id))) {
+    if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, String(req.query.id))) {
+      if (utils.regexDate(req.body.date)) {
+        const appoinRef = customerRef.doc(String(req.query.id));
+
+        await appoinRef.update({
+          resume: req.body.resume,
+          date: req.body.date,
+          place: req.body.place,
+          updatedAt: Date.now()
+        });
+
+        const result = { success: true, message: "Le rendez-vous a bien été modifié." };
+        res.status(200).send(result);
+      } else {
+        res.status(403).send({
+          sucess: false,
+          message: "format de la date incorrect. Format attendu : DD/MM/YYYY HH:MM  ",
+        });
+      }
+    } else {
+      res.status(403).send({
+        sucess: false,
+        message: "Vous n'avez pas le droit d'accéder à cette ressource",
+      });
+    }
+  } else {
+    res.status(403).send({
+      sucess: false,
+      message: "Vous devez renseigner l'id du Rdv a modifier.",
     });
   }
 });
