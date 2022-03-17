@@ -27,6 +27,10 @@ const Logger = LoggerManager(__filename);
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  *
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
+ * @apiSuccess {String}   message       Message.
+ * @apiSuccess {String}   record        Id de l'organisation qui viens d'être créé.
+ * 
  */
 OrganizationRoute.get("/", Interceptor, async (req: Request, res: Response) => {
   const result: IResult = {
@@ -75,6 +79,11 @@ OrganizationRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiHeader {String} Authorization Token 
  * 
  * @apiParam {String} id          Obligatoire l'id de l'organisation.
+ * 
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
+ * @apiSuccess {String}   message       Message.
+ * @apiSuccess {String}   result        Résultat.
  *
  */
 OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
@@ -123,8 +132,13 @@ OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
  *
  * @apiBody {String} address          Mandatory address of the Organization.
  * @apiBody {String} name             Mandatory  name of the Organization.
- * @apiBody {number} nbworkers        Optionnal Nombre d'utilisateur (0 par défaut)
+ * @apiBody {number} nbworkers        Obligatoire Nombre d'utilisateur (0 par défaut)
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
+ * @apiSuccess {String}   message       Message.
+ * @apiSuccess {String}   record        Résultat.
  */
+
 OrganizationRoute.post("/", Interceptor, async (req: Request, res: Response) => {
     const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
     if (utils.isFill(req.body.address) && utils.isFill(req.body.name)) {

@@ -27,8 +27,8 @@ const Logger = LoggerManager(__filename);
  * @apiDescription Récupère tous les clients d'une organisation si un id d'organisation est renseigné sinon renvoie tous les clients de mon périmètre
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
- * 
- * 
+ *
+ * @apiParam {String} id          Facultatif l'id d'une organisation. 
  * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
  * @apiSuccess {String}   message       Message.
  */
@@ -50,6 +50,10 @@ CustomerRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiDescription Récupère un client par son Id
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
+ * 
+ * @apiParam {String} id          Obligatoire l'id d'un client. 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
+ * @apiSuccess {String}   message       Message.
  *
  */
 CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
@@ -90,13 +94,17 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  *
- * @apiBody {String} id             Mandatory of Organization
- * @apiBody {String} email          Mandatory Email of the User.
- * @apiBody {String} phone          Mandatory Lastname.
- * @apiBody {String} name           Mandatory First name of the User.
- * @apiBody {String} surname        Mandatory Lastname of the User.
- * @apiBody {String} filename       Optionnal base 64 of a file.
- * @apiBody {Number} Age            Optionnal age.
+ * @apiBody {String} id             Obligatoire id d'un client.
+ * @apiBody {String} email          Obligatoire Email d'un client.
+ * @apiBody {String} phone          Obligatoire téléphone d'un client.
+ * @apiBody {String} name           Obligatoire nom d'un client.
+ * @apiBody {String} surname        Obligatoire prénom d'un client.
+ * @apiBody {String} filename       Facultatif Image en base 64.
+ * @apiBody {Number} Age            Facultatif age d'un client.
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
+ * @apiSuccess {String}   message       Message.
+ * @apiSuccess {String}   record        Id du client qui viens d'être créé.
  */
 CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
   if (utils.isFill(req.body.email) && utils.isFill(req.body.phone) && utils.isFill(req.body.surname) && utils.isFill(req.body.email)) {
@@ -204,6 +212,11 @@ CustomerRoute.delete("/:id", Interceptor, async (req: Request, res: Response) =>
  * 
  * @apiParam {String} id          Obligatoire l'id du customer.
  * @apiBody {String} image                 Image en Base64
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la création.
+ * @apiSuccess {String}   message       Message.
+ * @apiSuccess {String}   Date          Date de création.
+ * @apiSuccess {String}   ImageUrl      Url de l'image.
  */
 CustomerRoute.post("/:id/image", Interceptor, async (req: Request, res: Response) => {
   try {
@@ -234,7 +247,10 @@ CustomerRoute.post("/:id/image", Interceptor, async (req: Request, res: Response
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  * 
- * @apiParam {String} id          Obligatoire l'id du customer.
+ * @apiParam {String} id          Obligatoire l'id du client.
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la création.
+ * @apiSuccess {String}   message       Message.
  */
 CustomerRoute.delete("/:id/image", Interceptor, async (req: Request, res: Response) => {
   try {

@@ -26,6 +26,7 @@ const custoRef = db.collection("customers");
  * 
  * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
  * @apiSuccess {String}   message       Message.
+ * @apiSuccess {Number}   total         Total de rendez-vous récupérés.
  * @apiSuccess {Object}   record        Les informations du rendez-vous. 
  *
  */
@@ -121,7 +122,7 @@ AppointementRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
  * 
  * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
  * @apiSuccess {String}   message       Message.
- * @apiSuccess {Object}   record        L'id du rendez-vous. 
+ * @apiSuccess {String}   record        L'id du rendez-vous. 
  */
 AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);

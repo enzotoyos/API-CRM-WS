@@ -241,7 +241,7 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
  * @apiDescription Met a jours les informations d'un administrateur
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
- * @apiParam {String} id          Obligatoire l'id de l'admin.
+ * @apiParam {String} id          Obligatoire l'id de l'administrateur.
  *
  * @apiSuccess {boolean}  success       Vrai pour la réussite de la modification.
  * @apiSuccess {String}   message       Message.
