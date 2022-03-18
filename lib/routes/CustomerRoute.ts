@@ -205,6 +205,14 @@ CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
  * @apiBody {number} age Age du client a modifier
  * @apiBody {String} phone Téléphone du client a modifier
  *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "email": "exemple.mail@mail.com",
+ *       "name": "MyUniqueAPIKEY",
+ *        "age":"33",
+ *       "phone":"phone"
+ *     }
+ *
  * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
  * @apiSuccess {String}   message       Message.
  */
