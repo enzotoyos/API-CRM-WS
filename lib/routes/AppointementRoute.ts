@@ -68,6 +68,7 @@ AppointementRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * 
  * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
  * @apiSuccess {String}   message       Message.
+ * 
  */
 AppointementRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
@@ -76,10 +77,10 @@ AppointementRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
     message: "La récupération du rendez-vous a réussi.",
   };
 
-  if (utils.isFill(String(req.query.id))) {
-    if (await adminCtrl.checkAutorisationCustForAdmin(tokenDecod.uid, String(req.query.id))) {
+  if (utils.isFill(String(req.params.id))) {
+    if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, String(req.params.id))) {
       try {
-        const doc = await appointementRef.doc().get();
+        const doc = await appointementRef.doc(req.params.id).get();
         result.result = doc.data();
         res.status(200).send(result);
       } catch (error: any) {
@@ -99,9 +100,9 @@ AppointementRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
     }
   } else {
     res.status(403).send({
-      sucess: false,
+      success: false,
       message:
-        "Vous devez renseigner toutes les informations suivants : Résumé texte / Date / ID client ",
+        "Vous devez renseigner toutes l'information suivante ID rendez-vous ",
     });
   }
 });
@@ -196,10 +197,10 @@ AppointementRoute.post("/", Interceptor, async (req: Request, res: Response) => 
 AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
 
-  if (utils.isFill(String(req.query.id))) {
-    if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, String(req.query.id))) {
+  if (utils.isFill(String(req.params.id))) {
+    if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, String(req.params.id))) {
       if (utils.regexDate(req.body.date)) {
-        const appoinRef = appointementRef.doc(String(req.query.id));
+        const appoinRef = appointementRef.doc(String(req.params.id));
 
         await appoinRef.update({
           resume: req.body.resume,
@@ -255,7 +256,7 @@ AppointementRoute.delete("/:id", Interceptor, async (req: Request, res: Response
           idCusto = doc.id;
         }
       });
-      await custoRef.doc(idCusto).update({ organization: FieldValue.arrayRemove(req.params.id) });
+      await custoRef.doc(idCusto).update({ appointement: FieldValue.arrayRemove(req.params.id) });
       res.status(200).send({ success: true, message: "La suppression du Rdv : " + req.params.id + " a réussi." });
     } else {
       res.status(403).send({
