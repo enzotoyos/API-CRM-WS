@@ -328,7 +328,7 @@ CustomerRoute.delete(
  * @apiBody {String} image          Image en Base64
  * @apiHeader {String} Authorization Token
  *
- * @apiParam {String} id          Obligatoire  --  l'id du customer.
+ * @apiParam {String} id          Obligatoire  --  l'id de l'organisation ratachée au customer.
  *
  * @apiSuccess {boolean}  success       Vrai pour la réussite de la création.
  * @apiSuccess {String}   message       Message.
