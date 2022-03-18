@@ -147,9 +147,9 @@ AdminRoute.get("/", Interceptor, async (req: Request, res: Response) => {
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  *
- * @apiBody {String} email              Mandatory Admin Email.
- * @apiBody {String} name               Mandatory Admin Name.
- * @apiBody {String} surname            Mandatory Admin Lastname.
+ * @apiBody {String} email              Obligatoire Admin Email.
+ * @apiBody {String} name               Obligatoire Admin Name.
+ * @apiBody {String} surname            Obligatoire Admin Lastname.
  * 
  * @apiSuccess {boolean}  success       Vrai pour la réussite de la création.
  * @apiSuccess {String}   message       Message.

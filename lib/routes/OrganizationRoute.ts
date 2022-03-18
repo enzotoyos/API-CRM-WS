@@ -1,11 +1,11 @@
 import { Router, Request, Response } from "express";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import IResult from "../interface/IResult";
-import IOrganization from "../interface/IOrganization";
 import Interceptor from "../middleware/Interceptor";
 import TokenController from "../controller/TokenController";
 import AdminController from "../controller/AdminController";
 import UtilsController from "../controller/UtilsController";
+import ImageController from "../controller/ImageController";
 import OrganizationController from "../controller/OrganizationController";
 import LoggerManager from "../../config/Logger";
 
@@ -16,6 +16,7 @@ const adminRef = db.collection("admins");
 const tokenCtrl = new TokenController();
 const adminCtrl = new AdminController();
 const orgaCtrl = new OrganizationController();
+const imgCtrl = new ImageController();
 const utils = new UtilsController();
 const Logger = LoggerManager(__filename);
 
@@ -57,7 +58,7 @@ OrganizationRoute.get("/", Interceptor, async (req: Request, res: Response) => {
         result.record.push(Iorga);
       }
     });
-
+    result.total = result.record.length;
     res.status(200).send(result);
   } catch (error: any) {
     Logger.log({ level: "error", message: error });
@@ -130,9 +131,9 @@ OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
  * @apiPermission Token
  * @apiHeader {String} Authorization Token 
  *
- * @apiBody {String} address          Mandatory address of the Organization.
- * @apiBody {String} name             Mandatory  name of the Organization.
- * @apiBody {number} nbworkers        Obligatoire Nombre d'utilisateur (0 par défaut)
+ * @apiBody {String} address          (Obligatoire) address of the Organization. (Tout est autorisé)
+ * @apiBody {String} name             (Obligatoire) name of the Organization. (Lettres seulement, pas d'espace)
+ * @apiBody {number} nbworkers        (Optionnel) Nombre d'utilisateur (0 par défaut) (Chiffres seulement)
  * 
  * @apiSuccess {boolean}  success       Vrai pour la réussite de la récupération.
  * @apiSuccess {String}   message       Message.
@@ -142,7 +143,7 @@ OrganizationRoute.get("/:id", Interceptor, async (req: Request, res: Response) =
 OrganizationRoute.post("/", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   if (utils.isFill(req.body.address) && utils.isFill(req.body.name)) {
-    const regWorkers = (req.body.nbworkers) ? utils.regexAge(req.body.nbworkers) : true;
+    const regWorkers = (req.body.nbworkers) ? utils.regexNumber(req.body.nbworkers) : true;
     if (utils.regexString(req.body.name) && regWorkers) {
       try {
         // On crée une organisation
@@ -213,13 +214,8 @@ OrganizationRoute.put("/:id", Interceptor, async (req: Request, res: Response) =
   if (utils.isFill(String(req.params.id))) {
     if (await adminCtrl.checkAutorisationOrgaForAdmin(tokenDecod.uid, String(req.params.id))) {
       const orgaRef = organizationRef.doc(String(req.params.id));
-
-      await orgaRef.update({
-        address: req.body.address,
-        name: req.body.name,
-        nbworkers: req.body.nbworkers,
-        updatedAt: Date.now()
-      });
+      req.body.updatedAt = Date.now();
+      await orgaRef.update(req.body);
 
       res.status(200).send({ success: true, message: "L'organisation a bien été modifiée." });
     } else {
@@ -277,6 +273,78 @@ OrganizationRoute.delete("/:id", Interceptor, async (req: Request, res: Response
     res.status(403).send({
       success: false,
       message: "Suppression impossible. le champ ID de l'organisation est obligatoire",
+    });
+  }
+});
+
+/**
+ * @api {post} organization/ post Image
+ * @api {post} organization/:id/image Add Logo to organization
+ * @apiGroup Organization
+ * @apiName postImageOrganization
+ * @apiDescription Ajouter un logo pour une organisation
+ * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
+ * 
+ * @apiParam {String} id          Obligatoire l'id de l'organisation.
+ * @apiBody {String} image        Logo en Base64
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de l'ajout du logo.
+ * @apiSuccess {String}   message       Message.
+ * @apiSuccess {String}   Date          Date de création.
+ * @apiSuccess {String}   ImageUrl      Url de l'image.
+ */
+ OrganizationRoute.post("/:id/image", Interceptor, async (req: Request, res: Response) => {
+  try {
+    imgCtrl.uploadImage(req.body.image, req.params.id, 'organizationPhoto/').then(function (result) {
+      res.status(200).send({
+        sucess: true,
+        message: "Image uploaded",
+        Date: new Date().toLocaleString("en-GB", { timeZone: "Europe/Paris" }),
+        imageUrl: result[0],
+      });
+    });
+  } catch (error: any) {
+    Logger.log({ level: "error", message: error });
+    res.status(400).send({
+      success: false,
+      message: "Une erreur est survenue durant upload.",
+      error: error,
+    });
+  }
+}
+);
+
+/**
+ * @api {delete} organization/:id/image Delete Logo from organization
+ * @apiGroup Organization
+ * @apiName deleteImageOrganization
+ * @apiDescription Supprime un logo d'une organisation
+ * @apiPermission Token
+ * @apiHeader {String} Authorization Token 
+ * 
+ * @apiParam {String} id          Obligatoire l'id de l'organisation.
+ * @apiQuery {String} imageLink   Obligatoire lien de l'image a supprimer
+ * 
+ * @apiSuccess {boolean}  success       Vrai pour la réussite de la création.
+ * @apiSuccess {String}   message       Message.
+ */
+ OrganizationRoute.delete("/:id/image", Interceptor, async (req: Request, res: Response) => {
+  try {
+    const imageResult = imgCtrl.deleteImage(String(req.query.imageLink), req.params.id, 'organizationPhoto/');
+    if ((await imageResult) === false) {
+      res.status(403).send({ success: false, message: "erreur lors de la suppression" });
+    } else {
+      res.status(200).send({ success: true, message: "L'image a bien été supprimé de l'organisation : " + req.params.id });
+    }
+  } catch (error) {
+    console.log(error);
+    
+    Logger.log({ level: "error", message: error });
+    res.status(400).send({
+      success: false,
+      message: "Une erreur est survenue durant la suppression.",
+      error: error,
     });
   }
 });

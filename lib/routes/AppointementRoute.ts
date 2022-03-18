@@ -246,12 +246,12 @@ AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) =
 AppointementRoute.delete("/:id", Interceptor, async (req: Request, res: Response) => {
   const tokenDecod = tokenCtrl.getToken(req.headers.authorization);
   if (utils.isFill(req.params.id)) {
-    if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, req.body.id)) {
+    if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, req.params.id)) {
       await appointementRef.doc(String(req.params.id)).delete();
       let idCusto = "";
       const snapshot = await custoRef.get();
       snapshot.forEach((doc) => {
-        if (doc.data().customer.includes(req.params.id)) {
+        if (doc.data().appointement.includes(req.params.id)) {
           idCusto = doc.id;
         }
       });

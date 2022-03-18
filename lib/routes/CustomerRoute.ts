@@ -269,12 +269,9 @@ CustomerRoute.delete("/:id", Interceptor, async (req: Request, res: Response) =>
  * @api {post} customer/ post Image
  * @api {post} customer/:id/image Add Image to customer
  * @apiGroup Customer
- * @apiName postCustomer
  * @apiName postImageCustomer
  * @apiDescription Ajouter une image pour un client
  * @apiPermission Token
- * @apiBody {String} idCustomer            ID du customer
- * @apiBody {String} image          Image en Base64
  * @apiHeader {String} Authorization Token 
  * 
  * @apiParam {String} id          Obligatoire l'id du customer.
@@ -315,6 +312,7 @@ CustomerRoute.post("/:id/image", Interceptor, async (req: Request, res: Response
  * @apiHeader {String} Authorization Token 
  * 
  * @apiParam {String} id          Obligatoire l'id du client.
+ * @apiQuery {String} imageLink   Obligatoire lien de l'image a supprimer
  * 
  * @apiSuccess {boolean}  success       Vrai pour la réussite de la création.
  * @apiSuccess {String}   message       Message.
