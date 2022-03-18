@@ -44,6 +44,9 @@ NODE_ENV=
 # Clé d'encodage du JWT
 SECURE_KEY=
 
+# Lien de la doc
+APIDOC="https://apidoc.mira-ceti.ovh/"
+
 # Configuration serveur SMTP
 EMAIL=
 EMAIL_PASSWORD=
