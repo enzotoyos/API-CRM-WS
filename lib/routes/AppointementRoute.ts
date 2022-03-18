@@ -199,15 +199,11 @@ AppointementRoute.put("/:id", Interceptor, async (req: Request, res: Response) =
 
   if (utils.isFill(String(req.params.id))) {
     if (await adminCtrl.checkAutorisationRdvForAdmin(tokenDecod.uid, String(req.params.id))) {
-      if (utils.regexDate(req.body.date)) {
+      const regDate = (utils.isFill(req.body.date)) ? utils.regexDate(req.body.date) : true;
+      if (regDate) {
         const appoinRef = appointementRef.doc(String(req.params.id));
-
-        await appoinRef.update({
-          resume: req.body.resume,
-          date: req.body.date,
-          place: req.body.place,
-          updatedAt: Date.now()
-        });
+        req.body.updatedAt = Date.now();
+        await appoinRef.update(req.body);
 
         const result = { success: true, message: "Le rendez-vous a bien été modifié." };
         res.status(200).send(result);

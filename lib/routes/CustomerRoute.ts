@@ -226,19 +226,15 @@ CustomerRoute.put("/:id", Interceptor, async (req: Request, res: Response) => {
         String(req.query.id)
       )
     ) {
-      if (utils.regexDate(req.body.date)) {
-        const appoinRef = customerRef.doc(String(req.query.id));
-
-        await appoinRef.update({
-          resume: req.body.resume,
-          date: req.body.date,
-          place: req.body.place,
-          updatedAt: Date.now(),
-        });
+      const regDate = (utils.isFill(req.body.date)) ? utils.regexDate(req.body.date) : true;
+      if (regDate) {
+        const custoRef = customerRef.doc(String(req.query.id));
+        req.body.updatedAt = Date.now();
+        await custoRef.update(req.body);
 
         const result = {
           success: true,
-          message: "Le rendez-vous a bien été modifié.",
+          message: "Le client a bien été modifié.",
         };
         res.status(200).send(result);
       } else {
