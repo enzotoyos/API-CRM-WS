@@ -27,7 +27,7 @@ class TokenController {
             // Création de la date d'expiration
             const dateExpire = new Date();
             //On Ajoute 10 minutes
-            dateExpire.setMinutes(dateExpire.getMinutes() + 110);
+            dateExpire.setMinutes(dateExpire.getMinutes() + 10);
 
             //Création du Token
             const jwbToken: string = jwt.sign(
