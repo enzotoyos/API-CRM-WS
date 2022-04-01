@@ -121,7 +121,7 @@ class ImageController {
                         action: "read",
                         expires: "03-09-2491",
                     }).then(async (signedUrls) => {
-                        if (folder === 'customersPhoto') {
+                        if (folder === 'customersPhoto/') {
                             const customerDoc = customerRef.doc(id);
                             customerDoc.update({
                                 imageLink: FieldValue.arrayUnion(signedUrls[0]),
