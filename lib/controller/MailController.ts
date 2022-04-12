@@ -15,6 +15,7 @@ const transporterGmail = nodemailer.createTransport({
     },
 });
 
+// on est plutôt dans la couche domain. pas besoin d'un controller pour cela (couche présentation)
 class MailController {
 
     /**

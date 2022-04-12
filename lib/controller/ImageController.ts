@@ -1,10 +1,10 @@
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import admin from "firebase-admin";
 import { v4 as uuidv4 } from "uuid";
-// import LoggerManager from "../../config/Logger";
+// import LoggerManager from "../../config/Logger"; // pas besoin de garder du code mort. git fait cela
 
 const db = getFirestore();
-const adminRef = db.collection("admins");
+const adminRef = db.collection("admins"); // unused
 const customerRef = db.collection("customers");
 const orgaRef = db.collection("organizations");
 const storageRef = admin.storage().bucket(`crm-ws.appspot.com`);
@@ -20,7 +20,7 @@ class ImageController {
      * @param idCustomer string
      * @returns String[]
      */
-    async getImages(idCustomer: string): Promise<String[]> {
+    async getImages(idCustomer: string): Promise<string[]> {
         let imageLink = [];
         const customerDOC = await customerRef.doc(idCustomer).get();
         imageLink = customerDOC.data().imageLink;

@@ -115,6 +115,7 @@ CustomerRoute.get("/:id", Interceptor, async (req: Request, res: Response) => {
  * @apiSuccess {String}   record        Id du client qui viens d'être créé.
  */
 CustomerRoute.post("/", Interceptor, async (req: Request, res: Response) => {
+  // on autait pu faire une classe chargée de toutes ces vérifications; Un fichier de route n'est pas tout à fait sa place
   if (
     utils.isFill(req.body.email) &&
     utils.isFill(req.body.phone) &&

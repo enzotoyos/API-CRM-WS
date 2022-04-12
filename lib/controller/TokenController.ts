@@ -101,7 +101,7 @@ class TokenController {
      * @returns string
      */
     makeRandomHash(length: number): string {
-        var result: string = "";
+        let result: string = ""; // préférer let ou const aux var. plus de maîtrise
         const characters: string =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         const charactersLength: number = characters.length;

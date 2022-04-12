@@ -112,7 +112,7 @@ AdminRoute.get("/info", Interceptor, async (req: Request, res: Response) => {
  * @apiSuccess {Object[]} record        Les informations des administrateurs.
  * @apiSuccess {Number}   total         Total des administrateurs.
  */
-AdminRoute.get("/", Interceptor, async (req: Request, res: Response) => {
+AdminRoute.get("/", Interceptor, async (_req: Request, res: Response) => {
   const result = {
     success: true,
     message: 'La récupération de tous les administrateurs a réussi',
@@ -194,10 +194,10 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
           const sLink = await getAuth().generateEmailVerificationLink(
             req.body.email
           );
-          mailCtrl.sendInitPwd(
-            req.body.name + " " + req.body.surname,
-            req.body.email,
-            sLink
+          await mailCtrl.sendInitPwd(
+              req.body.name + " " + req.body.surname,
+              req.body.email,
+              sLink
           );
 
           adminRef.doc(userRecord.uid).set({
@@ -221,7 +221,7 @@ AdminRoute.post("/", Interceptor, async (req: Request, res: Response) => {
           res.status(403).send({
             sucess: false,
             message: "L'une des valeur suivante n'est pas au format attendu : " +
-              "Mail format : [a-z0-9]+@[a-z0-9]+\.[a-z]{2,4} "
+              "Mail format : [a-z0-9]+@[a-z0-9]+.[a-z]{2,4} "
               + "Nom & Prénom : [a-zA-Z] "
           });
         }

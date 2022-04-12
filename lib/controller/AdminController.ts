@@ -25,7 +25,7 @@ class AdminController {
         idAdmin: string,
         idOrganization: string
     ): Promise<boolean> {
-        let result: boolean = false;
+        const result = false;
         const docUser = adminRef.doc(idAdmin);
         const doc = await docUser.get();
 
@@ -41,7 +41,7 @@ class AdminController {
      * checkAutorisationCustForAdmin
 
      * @param idAdmin
-     * @param idOrganization
+     * @param idCustomer
      * @returns
      */
     async checkAutorisationCustForAdmin(
@@ -52,9 +52,9 @@ class AdminController {
 
         const docUser = adminRef.doc(idAdmin);
         const doc = await docUser.get();
-        const listIdOrga: String[] = doc.data().organization;
+        const listIdOrga: string[] = doc.data().organization;
 
-        for (let index in listIdOrga) {
+        for (const index in listIdOrga) {
             const docOrga = orgaRef.doc(String(listIdOrga[index]));
             const doc = await docOrga.get();
             if (doc.data().customer && doc.data().customer.length > 0) {

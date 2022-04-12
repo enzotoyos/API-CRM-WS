@@ -20,6 +20,7 @@ const Logger = LoggerManager(__filename);
 LogRouter.get("/", Interceptor, async (req: Request, res: Response) => {
   const pathToDefault = path.resolve('./') + path.join('/', 'Log', 'default.log');
   const pathToError = path.resolve('./') + path.join('/', 'Log', 'error.log');
+  // le répertoite log n'est pas créé apr défaut ?
   try {
     const defaultLog: string = fs.readFileSync(pathToDefault, { encoding: 'utf8', flag: 'r' });
     const defaultError: string = fs.readFileSync(pathToError, { encoding: 'utf8', flag: 'r' });
